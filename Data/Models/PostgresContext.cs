@@ -13,6 +13,8 @@ public partial class PostgresContext : DbContext
     public PostgresContext(DbContextOptions<PostgresContext> options)
         : base(options)
     {
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
     }
 
 
@@ -714,10 +716,12 @@ public partial class PostgresContext : DbContext
             entity.ToTable("userToken");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.AccessToken).HasColumnName("accessToken").HasMaxLength(500);
+
+            entity.Property(e => e.UserId).HasColumnName("userId");
+            entity.Property(e => e.AccessToken).HasColumnName("accessToken");
             entity.Property(e => e.ExpireadDateAccessToken).HasColumnName("expiredDateAccessToken");
-            entity.Property(e => e.RefreshToken).HasMaxLength(500).HasColumnName("refreshToken");
-            entity.Property(e => e.RefreshToken).HasColumnName("codeRefreshToken");
+            entity.Property(e => e.RefreshToken).HasColumnName("refreshToken");
+            entity.Property(e => e.CodeRefreshToken).HasColumnName("codeRefreshToken");
 
             entity.Property(e => e.ExpireadDateRefreshToken).HasColumnName("expiredDateRefreshToken");
             entity.Property(e => e.CreateDate).HasColumnName("createDate");

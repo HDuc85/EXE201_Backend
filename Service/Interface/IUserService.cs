@@ -3,7 +3,7 @@ using Data.Models;
 
 namespace Service.Interface
 {
-    public interface IUserService
+    public interface IUserService 
     {
         Task<User> CheckLogin(LoginRequest loginRequest);
         Task<User> FindById(Guid userId);

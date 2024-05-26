@@ -41,12 +41,15 @@ namespace Exe201_backend
 
             services.AddAuthentication(options =>
             {
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }
+            ).AddJwtBearer(options =>
             {
+                options.IncludeErrorDetails = true;
                 options.SaveToken = true;
+                options.UseSecurityTokenValidators = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -56,7 +59,7 @@ namespace Exe201_backend
                     ValidIssuer = Configuration["JWT:Issuer"],
                     ValidAudience = Configuration["JWT:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:SecretKey"])),
-                    ClockSkew = TimeSpan.Zero,
+                    ClockSkew = TimeSpan.Zero
                 };
                 options.Events = new JwtBearerEvents()
                 {
@@ -71,6 +74,8 @@ namespace Exe201_backend
                     },
                     OnMessageReceived = context =>
                     {
+                        
+                      
                         return Task.CompletedTask;
                     },
                     OnChallenge = context =>

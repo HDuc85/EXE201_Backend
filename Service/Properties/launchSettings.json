@@ -1,12 +1,12 @@
 {
   "profiles": {
-    "Data": {
+    "Service": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:58310;http://localhost:58312"
+      "applicationUrl": "https://localhost:58309;http://localhost:58311"
     }
   }
 }

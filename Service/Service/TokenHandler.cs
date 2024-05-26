@@ -3,6 +3,7 @@ using Data.ViewModel.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Service.Interface;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -27,7 +28,7 @@ namespace Service.Service
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString(),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(JwtRegisteredClaimNames.Iss, _configuration["JWT:Issuer"],ClaimValueTypes.String,_configuration["JWT:Issuer"]),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToString(),ClaimValueTypes.Integer64,_configuration["JWT:Issuer"]),
+                new Claim(JwtRegisteredClaimNames.Iat, EpochTime.GetIntDate(DateTime.Now).ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
                 new Claim(JwtRegisteredClaimNames.Aud, _configuration["JWT:Audience"],ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(JwtRegisteredClaimNames.Exp, DateTime.Now.AddMinutes(30).ToString("dd/MM/yyyy hh:mm:ss"),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString(),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
@@ -44,7 +45,7 @@ namespace Service.Service
                 claims: claims,
                 notBefore: DateTime.Now,
                 expires: DateTime.Now.AddMinutes(30),
-                credential
+                signingCredentials: credential
                 );
 
             string accessToken = new JwtSecurityTokenHandler().WriteToken(tokenInfo);
@@ -60,7 +61,7 @@ namespace Service.Service
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString(),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(JwtRegisteredClaimNames.Iss, _configuration["JWT:Issuer"],ClaimValueTypes.String,_configuration["JWT:Issuer"]),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToString(),ClaimValueTypes.Integer64,_configuration["JWT:Issuer"]),
+                 new Claim(JwtRegisteredClaimNames.Iat, EpochTime.GetIntDate(DateTime.Now).ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
                 new Claim(JwtRegisteredClaimNames.Aud, _configuration["JWT:Audience"],ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(JwtRegisteredClaimNames.Exp, DateTime.Now.AddHours(3).ToString("dd/MM/yyyy hh:mm:ss"),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                new Claim(ClaimTypes.SerialNumber,code,ClaimValueTypes.String, _configuration["JWT:Issuer"]),
@@ -75,7 +76,7 @@ namespace Service.Service
                 claims: claims,
                 notBefore: DateTime.Now,
                 expires: DateTime.Now.AddHours(3),
-                credential
+                signingCredentials: credential
                 );
 
             string refreshToken = new JwtSecurityTokenHandler().WriteToken(tokenInfo);
@@ -146,7 +147,12 @@ namespace Service.Service
                 RequireExpirationTime = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"])),
                 ValidateIssuerSigningKey = true,
-                ValidateLifetime = true,
+                
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = false,
+                ValidIssuer = _configuration["JWT:Issuer"],
+                ValidAudience = _configuration["JWT:Audience"],
                 ClockSkew = TimeSpan.Zero,
             }, out _
             );

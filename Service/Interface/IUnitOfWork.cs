@@ -7,7 +7,6 @@ namespace Service.Interface
     {
         Repository<User> RepositoryUser { get; }
         Repository<UserToken> RepositoryUserToken { get; }
-
         Task CommitAsync();
     }
 }
