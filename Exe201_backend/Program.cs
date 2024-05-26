@@ -1,31 +1,71 @@
 using Exe201_backend;
+using Microsoft.OpenApi.Models;
 
-using Service.Service.System.Authen;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
-using Service.Repo;
-using Service.Models;
+using Service.Service;
+using Service.Interface;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddDatabase();
-/*builder.Services.AddIdentity<User, Role>()
-                .AddEntityFrameworkStores<PostgresContext>()
-                .AddDefaultTokenProviders();*/
-/*builder.Services.AddTransient<UserManager<User>, UserManager<User>>();
-builder.Services.AddTransient<SignInManager<User>, SignInManager<User>>();*/
 
-builder.Services.AddTransient<IAuthenService, AuthenService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Name = "Autheorization",
+        Type = SecuritySchemeType.Http,
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Id = "Bearer",
+                    Type = ReferenceType.SecurityScheme
+                }
+            },
+            new List<string>()
+        }
+    });
+});
+
+// Add database 
+builder.Services.AddDatabase();
+
+// Add Authen
+builder.Services.AddTokenBearer();
+
+
+
+
+builder.Services.AddMvc();
+builder.Services.AddControllers();
+builder.Services.AddAuthorization();
+
+//Add Service
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITokenHandler,TokenHandler>();
+builder.Services.AddScoped<IUserTokenService, UserTokenService>();
+
+
 
 
 
 
 var app = builder.Build();
+
+
 
 
 // Configure the HTTP request pipeline.
@@ -37,6 +77,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

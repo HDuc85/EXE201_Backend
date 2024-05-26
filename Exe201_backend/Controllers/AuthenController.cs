@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Data.DataViewModel.System;
+using Data.ViewModel.System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
-using Service.Repo;
-using Service.ViewModel.System;
+using Service.Interface;
+
 
 namespace Exe201_backend.Controllers
 {
@@ -10,44 +12,64 @@ namespace Exe201_backend.Controllers
     [ApiController]
     public class AuthenController : ControllerBase
     {
-        private readonly IAuthenService _authenService;
-        public AuthenController(IAuthenService authenService)
+
+        IUserService _userService;
+        ITokenHandler _tokenHandler;
+        IUserTokenService _userTokenService;
+        public AuthenController(IUserService userService, ITokenHandler tokenHandler, IUserTokenService userTokenService)
         {
-            _authenService = authenService;
+            _userService = userService;
+            _tokenHandler = tokenHandler;
+            _userTokenService = userTokenService;
         }
 
-        [HttpPost("authenticate")]
+        [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Authenticate([FromBody] LoginRequest loginRequest)
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            if (!ModelState.IsValid)
+
+            if(loginRequest == null)
             {
-                return BadRequest(ModelState);
+                return BadRequest("Is not a user");
             }
-            var resultToken = await _authenService.Authencate(loginRequest);
-            if (string.IsNullOrEmpty(resultToken))
+
+            var user = await _userService.CheckLogin(loginRequest);
+
+            if(user == null)
             {
-                return BadRequest("User or Password is incorrect");
+                return Unauthorized();
             }
-            return Ok(new { token = resultToken });
+
+            (string accessToken, DateTime expiredDateAccessToken) = await _tokenHandler.CreateAccessToken(user);
+            (string refreshToken, DateTime expiredDateRefreshToken, string codeRefreshToken) = await _tokenHandler.CreateRefreshToken(user);
+
+            await _userTokenService.SaveToken(new Data.Models.UserToken
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpireadDateAccessToken = expiredDateAccessToken,
+                ExpireadDateRefreshToken = expiredDateRefreshToken,
+                CodeRefreshToken = codeRefreshToken,
+                UserId = user.Id,
+                CreateDate = DateTime.Now,
+                IsActive = true
+            });
+
+            return Ok(new JwtModel
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                Username = user.UserName,
+                FirstName = user.FirstName
+            });
         }
 
-        [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequest)
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenModel refreshToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var result = await _authenService.Register(registerRequest);
 
-            if (!result)
-            {
-                return BadRequest("fail");
-            }
-            return Ok(result);
+
+            return Ok(await _tokenHandler.ValidateRefreshToken(refreshToken.RefreshToken));
         }
-
     }
 }
