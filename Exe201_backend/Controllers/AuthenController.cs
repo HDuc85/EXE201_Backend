@@ -37,7 +37,7 @@ namespace Exe201_backend.Controllers
 
             if(user == null)
             {
-                return Unauthorized();
+                return Unauthorized("User or password is incorrect");
             }
 
             (string accessToken, DateTime expiredDateAccessToken) = await _tokenHandler.CreateAccessToken(user);
@@ -67,9 +67,10 @@ namespace Exe201_backend.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenModel refreshToken)
         {
-
-
-            return Ok(await _tokenHandler.ValidateRefreshToken(refreshToken.RefreshToken));
+            var validate = await _tokenHandler.ValidateRefreshToken(refreshToken.RefreshToken);
+            if (validate.Username == null)
+                return Unauthorized("Invalid RefreshToken");
+            return Ok(validate);
         }
     }
 }

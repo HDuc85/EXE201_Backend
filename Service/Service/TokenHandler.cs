@@ -1,6 +1,7 @@
 ﻿using Data.Models;
 using Data.ViewModel.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.IdentityModel.Tokens;
 using Service.Interface;
 using System.Globalization;
@@ -140,22 +141,27 @@ namespace Service.Service
         {
             JwtModel jwtModel = new ();
 
-           
+            var claimPriciple =  new ClaimsPrincipal();
+            try
+          {
+                claimPriciple = new JwtSecurityTokenHandler().ValidateToken(refreshToken, new TokenValidationParameters
+                {
+                    RequireExpirationTime = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"])),
+                    ValidateIssuerSigningKey = true,
 
-            var claimPriciple = new JwtSecurityTokenHandler().ValidateToken(refreshToken, new TokenValidationParameters
-            {
-                RequireExpirationTime = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"])),
-                ValidateIssuerSigningKey = true,
-                
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = false,
-                ValidIssuer = _configuration["JWT:Issuer"],
-                ValidAudience = _configuration["JWT:Audience"],
-                ClockSkew = TimeSpan.Zero,
-            }, out _
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = false,
+                    ValidIssuer = _configuration["JWT:Issuer"],
+                    ValidAudience = _configuration["JWT:Audience"],
+                    ClockSkew = TimeSpan.Zero,
+                }, out _
             );
+            } catch
+            {
+                return new();
+            }
 
             if (claimPriciple == null) return new();
 

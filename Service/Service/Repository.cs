@@ -32,7 +32,9 @@ namespace Service.Service
 
         public async Task<T> GetSingleByCondition(Expression<Func<T, bool>> expression = null)
         {
-            return await _postgresContext.Set<T>().FirstOrDefaultAsync();
+            if(expression == null)
+                return await _postgresContext.Set<T>().FirstOrDefaultAsync();
+            return await _postgresContext.Set<T>().Where(expression).FirstOrDefaultAsync();
         }
 
         public void Delete(T entity)
