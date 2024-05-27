@@ -8,8 +8,8 @@ public partial class Item
     public int Id { get; set; }
 
     public int? ItemTypeId { get; set; }
-
-    public int? ItemId { get; set; }
+    public int? ProductId {  get; set; }
+    public int? BoxId { get; set; }
 
     public bool? IsActive { get; set; }
 

@@ -300,16 +300,19 @@ public partial class PostgresContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ItemId).HasColumnName("itemId");
+            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.BoxId).HasColumnName("boxId");
+
+
             entity.Property(e => e.ItemTypeId).HasColumnName("itemTypeId");
 
             entity.HasOne(d => d.ItemNavigation).WithMany(p => p.Items)
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("item_itemId_fkey1");
+                .HasForeignKey(d => d.BoxId)
+                .HasConstraintName("item_boxId_fkey");
 
             entity.HasOne(d => d.Item1).WithMany(p => p.Items)
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("item_itemId_fkey");
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("item_productId_fkey");
 
             entity.HasOne(d => d.ItemType).WithMany(p => p.Items)
                 .HasForeignKey(d => d.ItemTypeId)
