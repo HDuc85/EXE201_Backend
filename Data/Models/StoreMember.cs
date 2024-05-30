@@ -9,14 +9,11 @@ public partial class StoreMember
 
     public Guid? MemberId { get; set; }
 
-  
+    public bool? IsActive { get; set; }
 
     public int? StoreId { get; set; }
 
-    public bool? IsActive { get; set; }
-
+    public virtual User? Member { get; set; }
 
     public virtual Store? Store { get; set; }
-
-    public virtual User? User { get; set; }
 }

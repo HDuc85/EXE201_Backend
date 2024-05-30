@@ -9,11 +9,13 @@ public partial class Media
 
     public string? MediaUrl { get; set; }
 
-    public string? MediaTypeId { get; set; }
+    public int? MediaTypeId { get; set; }
 
     public bool? IsActive { get; set; }
 
     public virtual ICollection<FeedbackMedia> FeedbackMedia { get; set; } = new List<FeedbackMedia>();
 
     public virtual ICollection<ItemMedia> ItemMedia { get; set; } = new List<ItemMedia>();
+
+    public virtual MediaType? MediaType { get; set; }
 }

@@ -47,11 +47,14 @@ namespace Service.Service
         {
            var entities = _postgresContext.Set<T>().Where(expression).ToList();
            if( entities.Count > 0 ) _postgresContext.Set<T>().RemoveRange(entities);
+           
+
         }
 
         public async Task Insert(T entity)
         {
            await _postgresContext.Set<T>().AddAsync(entity);
+            
         }
 
         public async Task Insert(IEnumerable<T> entities)

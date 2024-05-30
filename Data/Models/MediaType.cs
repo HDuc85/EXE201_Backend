@@ -10,4 +10,6 @@ public partial class MediaType
     public string? MediaName { get; set; }
 
     public bool? IsActive { get; set; }
+
+    public virtual ICollection<Media> Media { get; set; } = new List<Media>();
 }

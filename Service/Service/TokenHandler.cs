@@ -2,6 +2,7 @@
 using Data.ViewModel.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Service.Interface;
 using System.Globalization;
@@ -15,16 +16,21 @@ namespace Service.Service
     {
         IConfiguration _configuration;
         IUserService _userService;
-        IUserTokenService _userTokenService;
-        public TokenHandler(IConfiguration configuration, IUserService userService, IUserTokenService userTokenService)
+        
+        UserManager<User> _userManager;
+        public TokenHandler(IConfiguration configuration, IUserService userService, UserManager<User> userManager)
         {
+            _userManager = userManager;
             _userService = userService;
             _configuration = configuration;
-            _userTokenService = userTokenService;
+            
         }
         public async Task<(string,DateTime)> CreateAccessToken(User user)
         {
             DateTime expiredToken = DateTime.Now.AddMinutes(30);
+            
+            var roles = await _userManager.GetRolesAsync(user);
+
             var claims = new Claim[]
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString(),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
@@ -33,9 +39,9 @@ namespace Service.Service
                 new Claim(JwtRegisteredClaimNames.Aud, _configuration["JWT:Audience"],ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(JwtRegisteredClaimNames.Exp, DateTime.Now.AddMinutes(30).ToString("dd/MM/yyyy hh:mm:ss"),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString(),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
-                new Claim(ClaimTypes.Name,user.FirstName,ClaimValueTypes.String,_configuration["JWT:Issuer"]),
+                new Claim(ClaimTypes.Name,user.Firstname,ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim("Username", user.UserName, ClaimValueTypes.String, _configuration["JWT:Issuer"])
-            };
+            }.Union(roles.Select(x => new Claim(ClaimTypes.Role,x)));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]));
             var credential = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -50,6 +56,8 @@ namespace Service.Service
                 );
 
             string accessToken = new JwtSecurityTokenHandler().WriteToken(tokenInfo);
+
+            await _userManager.SetAuthenticationTokenAsync(user, "AccessTokenProvider", "AccessToken", accessToken);
 
             return await Task.FromResult((accessToken, expiredToken));
         }
@@ -66,6 +74,7 @@ namespace Service.Service
                 new Claim(JwtRegisteredClaimNames.Aud, _configuration["JWT:Audience"],ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                 new Claim(JwtRegisteredClaimNames.Exp, DateTime.Now.AddHours(3).ToString("dd/MM/yyyy hh:mm:ss"),ClaimValueTypes.String,_configuration["JWT:Issuer"]),
                new Claim(ClaimTypes.SerialNumber,code,ClaimValueTypes.String, _configuration["JWT:Issuer"]),
+               new Claim("Username", user.UserName, ClaimValueTypes.String, _configuration["JWT:Issuer"])
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]));
@@ -80,14 +89,17 @@ namespace Service.Service
                 signingCredentials: credential
                 );
 
+            
             string refreshToken = new JwtSecurityTokenHandler().WriteToken(tokenInfo);
+            
+            await _userManager.SetAuthenticationTokenAsync(user, "RefreshTokenProvider", "RefreshToken", refreshToken);
 
             return await Task.FromResult((refreshToken, expiredToken, code));
         }
 
         public async Task ValidateToken(TokenValidatedContext context)
         {
-            var claims = context.Principal.Claims.ToList();
+            var claims =  context.Principal.Claims.ToList();
 
             if(claims.Count == 0)
             {
@@ -165,15 +177,16 @@ namespace Service.Service
 
             if (claimPriciple == null) return new();
 
-            string code = claimPriciple.Claims.FirstOrDefault(s => s.Type == ClaimTypes.SerialNumber)?.Value;
+            string username = claimPriciple?.Claims?.FirstOrDefault(s => s.Type == "Username")?.Value;
 
-            if(string.IsNullOrEmpty(code)) return new();
+            var user = await _userManager.FindByNameAsync(username);
 
-            UserToken userToken = await _userTokenService.CheckRefreshToken(code);
+            var token = await _userManager.GetAuthenticationTokenAsync(user, "AccessTokenProvider", "AccessToken");
 
-            if(userToken != null)
-            {
-                User user = await _userService.FindById(userToken.UserId);
+            if(string.IsNullOrEmpty(token)) return new();
+
+             
+
                 (string newAccessToken, DateTime createdDateAccessToken) = await CreateAccessToken(user);
                 (string newRefreshToken, DateTime createdDateRefreshToken, string newCode) = await CreateRefreshToken(user);
 
@@ -182,10 +195,10 @@ namespace Service.Service
                     AccessToken = newAccessToken,
                     RefreshToken = newRefreshToken,
                     Username = user.UserName,
-                    FirstName = user.FirstName
+                    FirstName = user.Firstname
                 };
-            }
-            return new();
+            
+           
 
         }
 

@@ -1,5 +1,6 @@
-﻿using Data.DataViewModel.System;
+﻿using Data.ViewModel.Authen;
 using Data.ViewModel.System;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,55 +16,58 @@ namespace Exe201_backend.Controllers
 
         IUserService _userService;
         ITokenHandler _tokenHandler;
-        IUserTokenService _userTokenService;
-        public AuthenController(IUserService userService, ITokenHandler tokenHandler, IUserTokenService userTokenService)
+      
+        public AuthenController(IUserService userService, ITokenHandler tokenHandler)
         {
             _userService = userService;
             _tokenHandler = tokenHandler;
-            _userTokenService = userTokenService;
+          
         }
-
+        /// <summary>
+        /// Login with Username and password
+        /// </summary>
+        /// <param name="loginRequest"></param>
+        /// <returns></returns>
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+        public async Task<IActionResult> Login(IValidator<LoginRequest> validator, [FromBody] LoginRequest loginRequest)
         {
-
-            if(loginRequest == null)
+            var validations = await validator.ValidateAsync(loginRequest);
+            if(!validations.IsValid)
             {
-                return BadRequest("Is not a user");
+                return BadRequest(validations.Errors.Select(x => new ErrorValidation
+                {
+                    FieldName = x.PropertyName,
+                    ErrorMessage = x.ErrorMessage,
+                }));
             }
 
-            var user = await _userService.CheckLogin(loginRequest);
+            var apiResult = await _userService.CheckLogin(loginRequest);
 
-            if(user == null)
+            if(!apiResult.Success)
             {
-                return Unauthorized("User or password is incorrect");
+                return Unauthorized(apiResult.message);
             }
 
-            (string accessToken, DateTime expiredDateAccessToken) = await _tokenHandler.CreateAccessToken(user);
-            (string refreshToken, DateTime expiredDateRefreshToken, string codeRefreshToken) = await _tokenHandler.CreateRefreshToken(user);
+            (string accessToken, DateTime expiredDateAccessToken) = await _tokenHandler.CreateAccessToken(apiResult.Value);
+            (string refreshToken, DateTime expiredDateRefreshToken, string codeRefreshToken) = await _tokenHandler.CreateRefreshToken(apiResult.Value);
 
-            await _userTokenService.SaveToken(new Data.Models.UserToken
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpireadDateAccessToken = expiredDateAccessToken,
-                ExpireadDateRefreshToken = expiredDateRefreshToken,
-                CodeRefreshToken = codeRefreshToken,
-                UserId = user.Id,
-                CreateDate = DateTime.Now,
-                IsActive = true
-            });
+            
 
             return Ok(new JwtModel
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                Username = user.UserName,
-                FirstName = user.FirstName
+                Username = apiResult.Value.UserName,
+                FirstName = apiResult.Value.Firstname,
+                AccessTokenExpiredDate = expiredDateAccessToken
             });
         }
-
+        /// <summary>
+        /// Make new access token with refresh token
+        /// </summary>
+        /// <param name="refreshToken"></param>
+        /// <returns></returns>
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenModel refreshToken)
         {

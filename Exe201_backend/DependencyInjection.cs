@@ -5,20 +5,34 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Service.Interface;
+using Microsoft.AspNetCore.Identity;
+using Data.ViewModel.Helper;
 
 namespace Exe201_backend
 {
     public static class DependencyInjection
     {
 
-        
+      
      
-        public static IServiceCollection AddDatabase(this IServiceCollection services)
+        public static void AddDatabase(this IServiceCollection services)
         {
 
             var connectionString = GetConnectionString();
             services.AddDbContext<PostgresContext>(options => options.UseNpgsql(connectionString));
-            return services;
+
+         
+            
+        }
+
+        public static void AddEmailConfig (this IServiceCollection services)
+        {
+            IConfigurationRoot Configuration = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+                      .AddJsonFile("appsettings.json", true, true)
+                      .Build();
+            services.Configure<EmailConfig>(Configuration.GetSection("Mail"));
+
         }
 
         private static string GetConnectionString()

@@ -6,7 +6,9 @@ namespace Service.Interface
     public interface IUnitOfWork
     {
         Repository<User> RepositoryUser { get; }
-        Repository<UserToken> RepositoryUserToken { get; }
+        Repository<UserStatusLog> RepositoryUserStatusLog { get; }
+        Repository<Status> RepositoryStatus { get; }
+
         Task CommitAsync();
     }
 }

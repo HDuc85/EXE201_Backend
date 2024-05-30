@@ -20,7 +20,7 @@ public partial class ProductVariant
     public double? Price { get; set; }
 
     public int? Quantity { get; set; }
-
+    public double? Discount { get; set; }
     public bool? IsActive { get; set; }
 
     public virtual ICollection<BoxItem> BoxItems { get; set; } = new List<BoxItem>();

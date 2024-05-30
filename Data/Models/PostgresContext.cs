@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Models;
 
-public partial class PostgresContext : DbContext
+public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 {
     public PostgresContext()
     {
@@ -27,18 +29,16 @@ public partial class PostgresContext : DbContext
     public virtual DbSet<Brand> Brands { get; set; }
 
 
-
+    public virtual DbSet<Voucher> Vouchers { get; set; }
     public virtual DbSet<Cart> Carts { get; set; }
+
 
 
     public virtual DbSet<Color> Colors { get; set; }
 
-
     public virtual DbSet<Feedback> Feedbacks { get; set; }
 
     public virtual DbSet<FeedbackMedia> FeedbackMedia { get; set; }
-
-
 
 
     public virtual DbSet<Item> Items { get; set; }
@@ -53,6 +53,7 @@ public partial class PostgresContext : DbContext
 
 
 
+    
 
 
 
@@ -67,6 +68,7 @@ public partial class PostgresContext : DbContext
     public virtual DbSet<PaymentDetail> PaymentDetails { get; set; }
 
 
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<ProductTag> ProductTags { get; set; }
@@ -74,12 +76,10 @@ public partial class PostgresContext : DbContext
     public virtual DbSet<ProductVariant> ProductVariants { get; set; }
 
 
+
     public virtual DbSet<Role> Roles { get; set; }
 
-
-
-
-
+   // public virtual DbSet<Roleclaim> Roleclaims { get; set; }
 
 
 
@@ -91,25 +91,29 @@ public partial class PostgresContext : DbContext
 
     public virtual DbSet<Store> Stores { get; set; }
 
-    public virtual DbSet<StoreMember> StoreMembers { get; set; }
-
-
     public virtual DbSet<StoreItem> StoreItems { get; set; }
 
+    public virtual DbSet<StoreMember> StoreMembers { get; set; }
+
+   
 
     public virtual DbSet<Tag> Tags { get; set; }
 
     public virtual DbSet<TagValue> TagValues { get; set; }
 
-
     public virtual DbSet<User> Users { get; set; }
 
+   
+
     public virtual DbSet<UserStatusLog> UserStatusLogs { get; set; }
-    public virtual DbSet<UserToken> UserTokens { get; set; }
 
+    //public virtual DbSet<Userclaim> Userclaims { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    { }
+    //public virtual DbSet<Userlogin> Userlogins { get; set; }
+
+    //public virtual DbSet<Usertoken> Usertokens { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -118,6 +122,7 @@ public partial class PostgresContext : DbContext
             .HasPostgresEnum("auth", "code_challenge_method", new[] { "s256", "plain" })
             .HasPostgresEnum("auth", "factor_status", new[] { "unverified", "verified" })
             .HasPostgresEnum("auth", "factor_type", new[] { "totp", "webauthn" })
+            .HasPostgresEnum("auth", "one_time_token_type", new[] { "confirmation_token", "reauthentication_token", "recovery_token", "email_change_token_new", "email_change_token_current", "phone_change_token" })
             .HasPostgresEnum("pgsodium", "key_status", new[] { "default", "valid", "invalid", "expired" })
             .HasPostgresEnum("pgsodium", "key_type", new[] { "aead-ietf", "aead-det", "hmacsha512", "hmacsha256", "auth", "shorthash", "generichash", "kdf", "secretbox", "secretstream", "stream_xchacha20" })
             .HasPostgresEnum("realtime", "action", new[] { "INSERT", "UPDATE", "DELETE", "TRUNCATE", "ERROR" })
@@ -130,7 +135,8 @@ public partial class PostgresContext : DbContext
             .HasPostgresExtension("pgsodium", "pgsodium")
             .HasPostgresExtension("vault", "supabase_vault");
 
-     
+        
+
         modelBuilder.Entity<Box>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("box_pkey");
@@ -206,8 +212,25 @@ public partial class PostgresContext : DbContext
                 .HasColumnName("brandValue");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
         });
+        modelBuilder.Entity<Voucher>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("voucher_pkey");
 
-     
+            entity.ToTable("voucher");
+
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.VoucherName).HasColumnName("voucherName");
+            entity.Property(e => e.Value).HasColumnName("value");
+            entity.Property(e => e.DateStart).HasColumnName("dateStart");
+            entity.Property(e => e.DateEnd).HasColumnName("dateEnd");
+
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+
+        });
+
+
         modelBuilder.Entity<Cart>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("cart_pkey");
@@ -222,10 +245,6 @@ public partial class PostgresContext : DbContext
             entity.HasOne(d => d.Item).WithMany(p => p.Carts)
                 .HasForeignKey(d => d.ItemId)
                 .HasConstraintName("cart_itemId_fkey");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Carts)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("cart_userId_fkey");
         });
 
     
@@ -244,7 +263,7 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.IsActive).HasColumnName("isActive");
         });
 
-     
+      
         modelBuilder.Entity<Feedback>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("feedback_pkey");
@@ -299,24 +318,22 @@ public partial class PostgresContext : DbContext
             entity.ToTable("item");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ProductId).HasColumnName("productId");
             entity.Property(e => e.BoxId).HasColumnName("boxId");
-
-
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
             entity.Property(e => e.ItemTypeId).HasColumnName("itemTypeId");
+            entity.Property(e => e.ProductId).HasColumnName("productId");
 
-            entity.HasOne(d => d.ItemNavigation).WithMany(p => p.Items)
+            entity.HasOne(d => d.Box).WithMany(p => p.Items)
                 .HasForeignKey(d => d.BoxId)
                 .HasConstraintName("item_boxId_fkey");
-
-            entity.HasOne(d => d.Item1).WithMany(p => p.Items)
-                .HasForeignKey(d => d.ProductId)
-                .HasConstraintName("item_productId_fkey");
 
             entity.HasOne(d => d.ItemType).WithMany(p => p.Items)
                 .HasForeignKey(d => d.ItemTypeId)
                 .HasConstraintName("item_itemTypeId_fkey");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.Items)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("item_productId_fkey");
         });
 
         modelBuilder.Entity<ItemMedia>(entity =>
@@ -377,14 +394,17 @@ public partial class PostgresContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.MediaTypeId)
-                .HasColumnType("character varying")
-                .HasColumnName("mediaTypeId");
+            entity.Property(e => e.MediaTypeId).HasColumnName("mediaTypeId");
             entity.Property(e => e.MediaUrl)
                 .HasMaxLength(255)
                 .HasColumnName("mediaUrl");
+
+            entity.HasOne(d => d.MediaType).WithMany(p => p.Media)
+                .HasForeignKey(d => d.MediaTypeId)
+                .HasConstraintName("media_mediaTypeId_fkey");
         });
 
+     
         modelBuilder.Entity<Order>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("order_pkey");
@@ -395,7 +415,10 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.PaymentId).HasColumnName("paymentId");
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.UserId).HasColumnName("userId");
+            entity.Property(e => e.VoucherId).HasColumnName("voucherId");
+            entity.Property(e => e.ShipPrice).HasColumnName("shipPrice");
 
+            entity.HasOne(d => d.Voucher).WithMany(p => p.Orders).HasForeignKey(d => d.Id);
             entity.HasOne(d => d.Payment).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.PaymentId)
                 .HasConstraintName("order_paymentId_fkey");
@@ -490,7 +513,7 @@ public partial class PostgresContext : DbContext
                 .HasColumnName("transactionDateTime");
         });
 
- 
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("product_pkey");
@@ -544,6 +567,8 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.ProductId).HasColumnName("productId");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.Discount).HasColumnName("discount");
+
             entity.Property(e => e.SizeId).HasColumnName("sizeId");
             entity.Property(e => e.Thumbnail)
                 .HasMaxLength(255)
@@ -566,21 +591,39 @@ public partial class PostgresContext : DbContext
                 .HasConstraintName("productVariant_sizeId_fkey");
         });
 
-    
+     
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("role_pkey");
+            entity.HasKey(e => e.Id).HasName("pk_roles");
 
-            entity.ToTable("role");
+            entity.ToTable("roles");
 
-            entity.HasIndex(e => e.Role1, "role_role_key").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.Role1)
-                .HasMaxLength(255)
-                .HasColumnName("role");
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()")
+                .HasColumnName("id");
+            entity.Property(e => e.ConcurrencyStamp).HasColumnName("concurrencystamp");
+            entity.Property(e => e.Name).HasMaxLength(256);
+            entity.Property(e => e.NormalizedName)
+                .HasMaxLength(256)
+                .HasColumnName("normalizedname");
         });
+
+        modelBuilder.Entity<IdentityRoleClaim<Guid>>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_roleclaims");
+
+            entity.ToTable("roleclaims");
+
+            entity.Property(e => e.Id)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("id");
+            entity.Property(e => e.ClaimType).HasColumnName("claimtype");
+            entity.Property(e => e.ClaimValue).HasColumnName("claimvalue");
+            entity.Property(e => e.RoleId).HasColumnName("roleid");
+
+           
+        });
+
 
 
         modelBuilder.Entity<Size>(entity =>
@@ -598,7 +641,8 @@ public partial class PostgresContext : DbContext
                 .HasColumnName("sizeValue");
         });
 
- 
+    
+    
         modelBuilder.Entity<Status>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("status_pkey");
@@ -636,29 +680,6 @@ public partial class PostgresContext : DbContext
                 .HasColumnName("storeName");
         });
 
-        modelBuilder.Entity<StoreMember>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("storeMember_pkey");
-
-            entity.ToTable("storeMember");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.MemberId).HasColumnName("memberId");
-            entity.Property(e => e.StoreId).HasColumnName("storeId");
-
-         
-
-            entity.HasOne(d => d.User)
-           .WithMany(p => p.StoreMembers)
-           .HasForeignKey(d => d.MemberId)
-           .HasConstraintName("storeMember_memberId_fkey");
-
-            entity.HasOne(d => d.Store).WithMany(p => p.StoreMembers)
-                .HasForeignKey(d => d.StoreId)
-                .HasConstraintName("storeMember_storeId_fkey");
-        });
-
         modelBuilder.Entity<StoreItem>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("storeItem_pkey");
@@ -679,7 +700,27 @@ public partial class PostgresContext : DbContext
                 .HasConstraintName("storeItem_storeId_fkey");
         });
 
-    
+        modelBuilder.Entity<StoreMember>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("storeMember_pkey");
+
+            entity.ToTable("storeMember");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.MemberId).HasColumnName("memberId");
+            entity.Property(e => e.StoreId).HasColumnName("storeId");
+
+            entity.HasOne(d => d.Member).WithMany(p => p.StoreMembers)
+                .HasForeignKey(d => d.MemberId)
+                .HasConstraintName("storeMember_memberId_fkey");
+
+            entity.HasOne(d => d.Store).WithMany(p => p.StoreMembers)
+                .HasForeignKey(d => d.StoreId)
+                .HasConstraintName("storeMember_storeId_fkey");
+        });
+
+   
         modelBuilder.Entity<Tag>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("tag_pkey");
@@ -712,85 +753,52 @@ public partial class PostgresContext : DbContext
                 .HasConstraintName("tagValue_tagId_fkey");
         });
 
-        modelBuilder.Entity<UserToken>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("userToken_pkey");
-
-            entity.ToTable("userToken");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-
-            entity.Property(e => e.UserId).HasColumnName("userId");
-            entity.Property(e => e.AccessToken).HasColumnName("accessToken");
-            entity.Property(e => e.ExpireadDateAccessToken).HasColumnName("expiredDateAccessToken");
-            entity.Property(e => e.RefreshToken).HasColumnName("refreshToken");
-            entity.Property(e => e.CodeRefreshToken).HasColumnName("codeRefreshToken");
-
-            entity.Property(e => e.ExpireadDateRefreshToken).HasColumnName("expiredDateRefreshToken");
-            entity.Property(e => e.CreateDate).HasColumnName("createDate");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-
-
-
-        });
-
-
+    
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("user_pkey");
+            entity.HasKey(e => e.Id).HasName("pk_users");
 
-            entity.ToTable("account");
-
-            entity.HasIndex(e => e.Email, "user_email_key").IsUnique();
-
-            entity.HasIndex(e => e.PhoneNumber, "user_phoneNumber_key").IsUnique();
-
-            entity.HasIndex(e => e.UserName, "user_userName_key").IsUnique();
+            entity.ToTable("users");
 
             entity.Property(e => e.Id)
-                .HasDefaultValueSql("uuid_generate_v4()")
+                .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("id");
+            entity.Property(e => e.AccessFailedCount).HasColumnName("accessfailedcount");
             entity.Property(e => e.Address)
-                .HasMaxLength(500)
+                .HasMaxLength(256)
                 .HasColumnName("address");
             entity.Property(e => e.Birthday).HasColumnName("birthday");
+            entity.Property(e => e.ConcurrencyStamp).HasColumnName("concurrencystamp");
             entity.Property(e => e.Email)
-                .HasMaxLength(255)
+                .HasMaxLength(256)
                 .HasColumnName("email");
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(255)
-                .HasColumnName("firstName");
-            entity.Property(e => e.LastName)
-                .HasMaxLength(255)
-                .HasColumnName("lastName");
-            entity.Property(e => e.Password)
-                .HasMaxLength(255)
-                .HasColumnName("password");
-            entity.Property(e => e.PhoneNumber)
-                .HasMaxLength(255)
-                .HasColumnName("phoneNumber");
+            entity.Property(e => e.EmailConfirmed).HasColumnName("emailconfirmed");
+            entity.Property(e => e.Firstname)
+                .HasMaxLength(256)
+                .HasColumnName("firstname");
+            entity.Property(e => e.Lastname)
+                .HasMaxLength(256)
+                .HasColumnName("lastname");
+            entity.Property(e => e.LockoutEnabled).HasColumnName("lockoutenabled");
+            entity.Property(e => e.LockoutEnd)
+                .HasPrecision(6)
+                .HasColumnName("lockoutend");
+            entity.Property(e => e.NormalizedEmail)
+                .HasMaxLength(256)
+                .HasColumnName("normalizedemail");
+            entity.Property(e => e.NormalizedUserName)
+                .HasMaxLength(256)
+                .HasColumnName("normalizedusername");
+            entity.Property(e => e.PasswordHash).HasColumnName("passwordhash");
+            entity.Property(e => e.PhoneNumber).HasColumnName("phonenumber");
+            entity.Property(e => e.PhoneNumberConfirmed).HasColumnName("phonenumberconfirmed");
+            entity.Property(e => e.SecurityStamp).HasColumnName("securitystamp");
+            entity.Property(e => e.TwoFactorEnabled).HasColumnName("twofactorenabled");
             entity.Property(e => e.UserName)
-                .HasMaxLength(255)
-                .HasColumnName("userName");
+                .HasMaxLength(256)
+                .HasColumnName("username");
 
-            entity.HasMany(d => d.Roles).WithMany(p => p.Users)
-                .UsingEntity<Dictionary<string, object>>(
-                    "UserRole",
-                    r => r.HasOne<Role>().WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("userRole_roleId_fkey"),
-                    l => l.HasOne<User>().WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("userRole_userId_fkey"),
-                    j =>
-                    {
-                        j.HasKey("UserId", "RoleId").HasName("userRole_pkey");
-                        j.ToTable("userRole");
-                        j.IndexerProperty<Guid>("UserId").HasColumnName("userId");
-                        j.IndexerProperty<int>("RoleId").HasColumnName("roleId");
-                    });
+           
         });
 
         modelBuilder.Entity<UserStatusLog>(entity =>
@@ -814,11 +822,70 @@ public partial class PostgresContext : DbContext
                 .HasForeignKey(d => d.StatusId)
                 .HasConstraintName("userStatusLog_statusId_fkey");
 
-            entity.HasOne(d => d.User)
-            .WithMany(p => p.UserStatusLogs)
-            .HasForeignKey(d => d.UserId)
-            .HasConstraintName("userStatusLog_userId_fkey");
+            entity.HasOne(d => d.User).WithMany(p => p.UserStatusLogs)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("userStatusLog_userId_fkey");
         });
+
+        modelBuilder.Entity<IdentityUserClaim<Guid>>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_claims");
+
+            entity.ToTable("userclaims");
+
+            entity.Property(e => e.Id)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("id");
+            entity.Property(e => e.ClaimType).HasColumnName("claimtype");
+            entity.Property(e => e.ClaimValue).HasColumnName("claimvalue");
+            entity.Property(e => e.UserId).HasColumnName("userid");
+
+          
+        });
+
+        modelBuilder.Entity<IdentityUserLogin<Guid>>(entity =>
+        {
+            entity.ToTable("userlogins");
+            entity.HasKey(e => new { e.LoginProvider, e.ProviderKey });
+
+
+            entity.Property(e => e.LoginProvider)
+                .HasMaxLength(450)
+                .HasColumnName("loginprovider");
+            entity.Property(e => e.ProviderKey)
+                .HasMaxLength(450)
+                .HasColumnName("providerkey");
+            entity.Property(e => e.ProviderDisplayName).HasColumnName("providerdisplayname");
+            entity.Property(e => e.UserId).HasColumnName("userid");
+
+           
+        });
+
+        modelBuilder.Entity<IdentityUserToken<Guid>>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.LoginProvider, e.Name }).HasName("pk_usertokens");
+
+            entity.ToTable("usertokens");
+
+            entity.Property(e => e.UserId).HasColumnName("userid");
+            entity.Property(e => e.LoginProvider)
+                .HasMaxLength(450)
+                .HasColumnName("loginprovider");
+            entity.Property(e => e.Name).HasMaxLength(450);
+            entity.Property(e => e.Value).HasColumnName("value");
+
+         
+        });
+        modelBuilder.Entity<User>(entity => entity.ToTable(name: "users"));
+        modelBuilder.Entity<Role>(e => e.ToTable(name: "roles"));
+        modelBuilder.Entity<IdentityUserRole<Guid>>(entity => {
+            entity.ToTable(name: "userroles");
+            entity.HasKey(e => new { e.UserId, e.RoleId });
+        }
+        
+        );
+        
+        modelBuilder.HasSequence<int>("seq_schema_version", "graphql").IsCyclic();
 
         OnModelCreatingPartial(modelBuilder);
     }

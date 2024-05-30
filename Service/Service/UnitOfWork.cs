@@ -9,7 +9,8 @@ namespace Service.Service
         PostgresContext _postgresContext;
 
         Repository<User> _repositoryUser;
-        Repository<UserToken> _repositoryUserToken;
+        Repository<UserStatusLog> _repositoryUserStatusLog;
+        Repository<Status> _repositoryStatus;
         private bool disposedValue;
 
         public UnitOfWork(PostgresContext postgresContext)
@@ -18,7 +19,8 @@ namespace Service.Service
         }
 
         public Repository<User> RepositoryUser {  get { return _repositoryUser ??= new Repository<User>(_postgresContext); } }
-        public Repository<UserToken> RepositoryUserToken { get { return _repositoryUserToken ??= new Repository<UserToken>(_postgresContext); } }
+        public Repository<UserStatusLog> RepositoryUserStatusLog { get { return _repositoryUserStatusLog ??= new Repository<UserStatusLog>(_postgresContext); } }
+        public Repository<Status> RepositoryStatus { get { return _repositoryStatus ??= new Repository<Status>(_postgresContext); } }
 
 
         public async Task CommitAsync()

@@ -14,6 +14,4 @@ public partial class Cart
     public int? Quantity { get; set; }
 
     public virtual Item? Item { get; set; }
-
-    public virtual User? User { get; set; }
 }
