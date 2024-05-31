@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Data.ViewModel.Authen;
+using Data.ViewModel.System;
+using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
-using Service.Repo;
-using Service.ViewModel.System;
+using Service.Interface;
+
 
 namespace Exe201_backend.Controllers
 {
@@ -10,44 +13,68 @@ namespace Exe201_backend.Controllers
     [ApiController]
     public class AuthenController : ControllerBase
     {
-        private readonly IAuthenService _authenService;
-        public AuthenController(IAuthenService authenService)
-        {
-            _authenService = authenService;
-        }
 
-        [HttpPost("authenticate")]
+        IUserService _userService;
+        ITokenHandler _tokenHandler;
+      
+        public AuthenController(IUserService userService, ITokenHandler tokenHandler)
+        {
+            _userService = userService;
+            _tokenHandler = tokenHandler;
+          
+        }
+        /// <summary>
+        /// Login with Username and password
+        /// </summary>
+        /// <param name="loginRequest"></param>
+        /// <returns></returns>
+        [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Authenticate([FromBody] LoginRequest loginRequest)
+        public async Task<IActionResult> Login(IValidator<LoginRequest> validator, [FromBody] LoginRequest loginRequest)
         {
-            if (!ModelState.IsValid)
+            var validations = await validator.ValidateAsync(loginRequest);
+            if(!validations.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(validations.Errors.Select(x => new ErrorValidation
+                {
+                    FieldName = x.PropertyName,
+                    ErrorMessage = x.ErrorMessage,
+                }));
             }
-            var resultToken = await _authenService.Authencate(loginRequest);
-            if (string.IsNullOrEmpty(resultToken))
-            {
-                return BadRequest("User or Password is incorrect");
-            }
-            return Ok(new { token = resultToken });
-        }
 
-        [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequest)
+            var apiResult = await _userService.CheckLogin(loginRequest);
+
+            if(!apiResult.Success)
+            {
+                return Unauthorized(apiResult.message);
+            }
+
+            (string accessToken, DateTime expiredDateAccessToken) = await _tokenHandler.CreateAccessToken(apiResult.Value);
+            (string refreshToken, DateTime expiredDateRefreshToken, string codeRefreshToken) = await _tokenHandler.CreateRefreshToken(apiResult.Value);
+
+            
+
+            return Ok(new JwtModel
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                Username = apiResult.Value.UserName,
+                FirstName = apiResult.Value.Firstname,
+                AccessTokenExpiredDate = expiredDateAccessToken
+            });
+        }
+        /// <summary>
+        /// Make new access token with refresh token
+        /// </summary>
+        /// <param name="refreshToken"></param>
+        /// <returns></returns>
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenModel refreshToken)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var result = await _authenService.Register(registerRequest);
-
-            if (!result)
-            {
-                return BadRequest("fail");
-            }
-            return Ok(result);
+            var validate = await _tokenHandler.ValidateRefreshToken(refreshToken.RefreshToken);
+            if (validate.Username == null)
+                return Unauthorized("Invalid RefreshToken");
+            return Ok(validate);
         }
-
     }
 }
