@@ -88,6 +88,9 @@ builder.Services.AddControllers();
 //Add EmailConfig 
 builder.Services.AddEmailConfig();
 
+//Add FirebaseConfig
+builder.Services.AddFirebaseConfig();
+
 //Add Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
@@ -96,6 +99,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenHandler,TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
+builder.Services.AddScoped<IMediaHelper, MediaHelper>();
+
 
 builder.Services.AddScoped<PasswordHasher<User>>();
 

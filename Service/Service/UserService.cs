@@ -5,6 +5,7 @@ using Data.ViewModel.Helper;
 using Data.ViewModel.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using Service.Helper;
 using Service.Interface;
@@ -19,14 +20,17 @@ namespace Service.Service
         private readonly IEmailTemplateReader _emailTemplateReader;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly RoleManager<Role> _roleManager;
         private readonly IEmailHelper _emailHelper;
 
         public UserService(IUnitOfWork unitOfWork,
             IEmailTemplateReader emailTemplateReader,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
+            RoleManager<Role> roleManager,
             IEmailHelper emailHelper)
         {
+            _roleManager = roleManager;
             _emailHelper = emailHelper;
             _emailTemplateReader = emailTemplateReader;
             _signInManager = signInManager;
@@ -353,6 +357,60 @@ namespace Service.Service
             };
         }
 
+        public async Task<ApiResult<bool>> UpdateRole(UpdateRoleRequest updateRoleRequest)
+        {
+            var user = await _userManager.FindByNameAsync(updateRoleRequest.Username);
+            if (user == null)
+            {
+                return new()
+                {
+                    Success = false,
+                    message = "User is not exist!"
+                };
+            }
+           
+            
+            var roles = await _roleManager.Roles.ToListAsync();
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var roleRemove = new List<string>();
+            var roleAdd = new List<string>();
+            
+
+            foreach (var role in roles)
+            {
+                
+                if (userRoles.Any(x => x == role.Name))
+                {
+                    if (!updateRoleRequest.roles.Any(x => x == role.Name))
+                    {
+                        roleRemove.Add(role.Name);
+                    }
+
+                }
+                else
+                {
+                    if(updateRoleRequest.roles.Any(x => x == role.Name))
+                    {
+                        roleAdd.Add(role.Name);
+                    }
+                }
+            }
+
+
+            await _userManager.RemoveFromRolesAsync(user,roleRemove);
+            await _userManager.AddToRolesAsync(user, roleAdd);
+
+            userRoles = await _userManager.GetRolesAsync(user);
+
+
+            return new()
+            {
+                Success = true,
+                message = $"{user.UserName} add role : {string.Join(", ", userRoles.ToArray())} successful"
+            };
+        }
+    
+        
     }
 }
 
