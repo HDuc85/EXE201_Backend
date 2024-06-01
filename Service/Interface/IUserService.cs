@@ -15,6 +15,7 @@ namespace Service.Interface
         Task<(ApiResult<User>, string)> Register(RegisterRequest registerRequest);
         Task<ApiResult<bool>> ResetPassword(ResetPasswordRequest resetPasswordRequest);
         Task<bool> SendEmailComfirm(string Url, User user);
+        Task<ApiResult<bool>> UpdateRole(UpdateRoleRequest updateRoleRequest);
         Task<ApiResult<User>> UpdateUser(UpdateUserRequest updateUserRequest);
     }
 }

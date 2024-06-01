@@ -16,30 +16,35 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Service.Helper;
 using Data.ViewModel.Helper;
 using System.ComponentModel.Design;
+using System.Diagnostics.CodeAnalysis;
+using Data.ViewModel.System;
 
 namespace Exe201_backend.Controllers
 {
-    
+
     [Route("api/[controller]")]
     [ApiController]
-    
+
     public class UsersController : ControllerBase
     {
         private IUnitOfWork _unitOfWork;
         private IUserService _userService;
         private IEmailHelper _emailHelper;
-       
-        public UsersController(IUnitOfWork unitOfWork,IUserService userService, IEmailHelper emailHelper )
+        private IMediaHelper _mediaHelper;
+
+        public UsersController(IUnitOfWork unitOfWork, IUserService userService, IEmailHelper emailHelper,
+            IMediaHelper mediaHelper)
         {
+            _mediaHelper = mediaHelper;
             _emailHelper = emailHelper;
             _userService = userService;
             _unitOfWork = unitOfWork;
-           
+
         }
 
         // GET: api/Users
         /// <summary>
-        /// Only role Admin
+        /// Get all user and Only role Admin
         /// </summary>
         /// <returns></returns>
         [HttpGet]
@@ -48,9 +53,13 @@ namespace Exe201_backend.Controllers
         public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
         {
 
-            var test = await _unitOfWork.RepositoryUser.GetAll();
-           
-            return Ok(test);
+            var users = await _unitOfWork.RepositoryUser.GetAll();
+
+            if (users == null)
+            {
+                return NotFound();
+            }
+            return Ok(users);
         }
 
         // GET: api/Users/5
@@ -60,7 +69,7 @@ namespace Exe201_backend.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
-        [Authorize (Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<User>> GetUser(Guid id)
         {
             var user = await _unitOfWork.RepositoryUser.GetById(id);
@@ -72,11 +81,50 @@ namespace Exe201_backend.Controllers
 
             return user;
         }
+        /// <summary>
+        /// Get list User with pagesize
+        /// </summary>
+        /// <param name="pageSize"></param>
+
+        /// <returns></returns>
+        [HttpGet("PageSize")]
+        [Authorize(Roles = "admin")]
+        public async Task<ActionResult<IEnumerable<User>>> GetPageSize(int pageIndex, int pageSize)
+        {
+            var users = await _unitOfWork.RepositoryUser.GetPageSize(pageIndex: pageIndex, pageSize: pageSize);
+            if (users == null)
+            {
+                return NotFound();
+            }
+            return Ok(users);
+        }
+
+       
+
+        [HttpGet("Search")]
+        [Authorize(Roles = "admin")]
+        public async Task<ActionResult<IEnumerable<User>>> GetPageSize(string key, int pageIndex, int pageSize)
+        {
+
+            var users = await _unitOfWork.RepositoryUser.GetPageSize(x => 
+            x.UserName.Contains(key) || 
+            x.Firstname.Contains(key) || 
+            x.Lastname.Contains(key) || 
+            x.Email.Contains(key) ||
+            x.Address.Contains(key),
+            pageIndex: pageIndex, 
+            pageSize: pageSize);
+            if (users == null)
+            {
+                return NotFound();
+            }
+            return Ok(users);
+        }
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> PutUser([FromBody]UpdateUserRequest updateUserRequest)
         {
 
@@ -110,7 +158,8 @@ namespace Exe201_backend.Controllers
         }
 
         [HttpGet ("ComfirmEmail")]
-   
+        [AllowAnonymous]
+
         public async Task<IActionResult> ComfirmEmail(string userId, string token)
         {
             var result = await _userService.ComfirmEmail(userId,token);
@@ -164,7 +213,24 @@ namespace Exe201_backend.Controllers
 
             return NoContent();
         }
+        /// <summary>
+        /// Update role with username and List Roles
+        /// </summary>
+        /// <param name="updateRoleRequest"></param>
+        /// <returns></returns>
+        [HttpPost ("UpdateRole")]
+        [Authorize(Roles = "admin")]
 
+        public async Task<IActionResult> UpdateUserRole([FromBody]UpdateRoleRequest updateRoleRequest)
+        {
+            var result = await _userService.UpdateRole(updateRoleRequest);
+
+            if(!result.Success)
+            {
+                return BadRequest(result.message);
+            }
+            return Ok(result.message);
+        }
         
     }
 }

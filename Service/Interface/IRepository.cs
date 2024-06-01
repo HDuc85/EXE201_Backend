@@ -9,6 +9,7 @@ namespace Service.Interface
         void Delete(T entity);
         Task<IEnumerable<T>> GetAll(Expression<Func<T, bool>> expression = null);
         Task<T> GetById(object id);
+        Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null, int pageIndex = 1, int pageSize = 5);
         Task<T> GetSingleByCondition(Expression<Func<T, bool>> expression = null);
         Task Insert(IEnumerable<T> entities);
         Task Insert(T entity);

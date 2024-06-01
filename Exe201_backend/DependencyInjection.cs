@@ -13,8 +13,11 @@ namespace Exe201_backend
     public static class DependencyInjection
     {
 
-      
-     
+        private static readonly IConfiguration configuration = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+                      .AddJsonFile("appsettings.json", true, true)
+                      .Build();
+
         public static void AddDatabase(this IServiceCollection services)
         {
 
@@ -25,34 +28,30 @@ namespace Exe201_backend
             
         }
 
+        public static void AddFirebaseConfig(this IServiceCollection services)
+        {
+            services.Configure<FirebaseConfigModel>(configuration.GetSection("Firebase"));
+
+        }
+
         public static void AddEmailConfig (this IServiceCollection services)
         {
-            IConfigurationRoot Configuration = new ConfigurationBuilder()
-               .SetBasePath(Directory.GetCurrentDirectory())
-                      .AddJsonFile("appsettings.json", true, true)
-                      .Build();
-            services.Configure<EmailConfig>(Configuration.GetSection("Mail"));
+           
+            services.Configure<EmailConfig>(configuration.GetSection("Mail"));
 
         }
 
         private static string GetConnectionString()
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
-                 .SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile("appsettings.json", true, true)
-                        .Build();
-            var strConn = config["ConnectionStrings:DefaultConnection"];
+            
+            var strConn = configuration["ConnectionStrings:DefaultConnection"];
 
             return strConn;
         }
 
         public static void AddTokenBearer( this IServiceCollection services)
         {
-            IConfigurationRoot Configuration = new ConfigurationBuilder()
-               .SetBasePath(Directory.GetCurrentDirectory())
-                      .AddJsonFile("appsettings.json", true, true)
-                      .Build();
-
+           
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -70,9 +69,9 @@ namespace Exe201_backend
                     ValidateAudience = false,
                     ValidateIssuer = false,
                     ValidateLifetime = true,
-                    ValidIssuer = Configuration["JWT:Issuer"],
-                    ValidAudience = Configuration["JWT:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:SecretKey"])),
+                    ValidIssuer = configuration["JWT:Issuer"],
+                    ValidAudience = configuration["JWT:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"])),
                     ClockSkew = TimeSpan.Zero
                 };
                 options.Events = new JwtBearerEvents()
