@@ -16,7 +16,7 @@ public partial class Order
     public int? VoucherId { get; set; }
     public double? ShipPrice { get; set; }
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
-
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual ICollection<OrderStatusLog> OrderStatusLogs { get; set; } = new List<OrderStatusLog>();
     public virtual Voucher? Voucher { get; set; }
     public virtual PaymentDetail? Payment { get; set; }

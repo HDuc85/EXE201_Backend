@@ -11,6 +11,9 @@ namespace Service.Service
         Repository<User> _repositoryUser;
         Repository<UserStatusLog> _repositoryUserStatusLog;
         Repository<Status> _repositoryStatus;
+        Repository<Cart> _repositoryCart;
+ 
+
         private bool disposedValue;
 
         public UnitOfWork(PostgresContext postgresContext)
