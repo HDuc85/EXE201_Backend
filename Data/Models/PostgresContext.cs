@@ -437,6 +437,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.Property(e => e.ItemId).HasColumnName("itemId");
             entity.Property(e => e.OrderId).HasColumnName("orderId");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.Price).HasColumnName("price");
 
             entity.HasOne(d => d.Item).WithMany()
                 .HasForeignKey(d => d.ItemId)
@@ -776,6 +777,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.Property(e => e.Firstname)
                 .HasMaxLength(256)
                 .HasColumnName("firstname");
+            entity.Property(e => e.Avatar).HasColumnName("avatar");
             entity.Property(e => e.Lastname)
                 .HasMaxLength(256)
                 .HasColumnName("lastname");

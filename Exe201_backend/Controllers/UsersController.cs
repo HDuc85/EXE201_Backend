@@ -18,6 +18,7 @@ using Data.ViewModel.Helper;
 using System.ComponentModel.Design;
 using System.Diagnostics.CodeAnalysis;
 using Data.ViewModel.System;
+using Microsoft.OpenApi.Expressions;
 
 namespace Exe201_backend.Controllers
 {
@@ -124,10 +125,10 @@ namespace Exe201_backend.Controllers
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut]
-        [Authorize]
-        public async Task<IActionResult> PutUser([FromBody]UpdateUserRequest updateUserRequest)
+        //[Authorize]
+        public async Task<IActionResult> PutUser([FromForm]UpdateUserRequest updateUserRequest)
         {
-
+           
           var  results =  await _userService.UpdateUser(updateUserRequest);
             if (!results.Success)
             {

@@ -1,31 +1,25 @@
 using Exe201_backend;
-using Service.Service.System.Authen;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.OpenApi.Models;
+
+using Service.Service;
+using Service.Interface;
+using System.Reflection;
+using FluentValidation;
+using System;
+using Data.ViewModel.Authen;
+using Data.Models;
 using Microsoft.AspNetCore.Identity;
-using Service.Repo;
-using Service.Models;
-using Service.Service.System.Product;
+using Data.ViewModel.Helper;
+using Service.Helper;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddDatabase();
-/*builder.Services.AddIdentity<User, Role>()
-                .AddEntityFrameworkStores<PostgresContext>()
-                .AddDefaultTokenProviders();*/
-/*builder.Services.AddTransient<UserManager<User>, UserManager<User>>();
-builder.Services.AddTransient<SignInManager<User>, SignInManager<User>>();*/
 
-builder.Services.AddTransient<IAuthenService, AuthenService>();
-builder.Services.AddScoped<IProductService, ProductService>();
+
 builder.Services.AddControllers();
-builder.Services.AddControllers()
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-            });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-
 builder.Services.AddHttpContextAccessor();
 
 
@@ -51,7 +45,7 @@ builder.Services.AddSwaggerGen(options =>
                 Type = ReferenceType.SecurityScheme,
                 Id = "Bearer"
               },
-            
+
 
             },
             new List<string>()
@@ -70,7 +64,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddDatabase();
 
 //Add Identity
-builder.Services.AddIdentity<User, Role>( options => {
+builder.Services.AddIdentity<User, Role>(options => {
     options.SignIn.RequireConfirmedEmail = true;
 })
              .AddEntityFrameworkStores<PostgresContext>()
@@ -102,7 +96,7 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
 
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ITokenHandler,TokenHandler>();
+builder.Services.AddScoped<ITokenHandler, TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
 builder.Services.AddScoped<IMediaHelper, MediaHelper>();
@@ -113,13 +107,12 @@ builder.Services.AddScoped<PasswordHasher<User>>();
 //Add validator
 builder.Services.AddScoped<IValidator<LoginRequest>, LoginValidator>();
 
-builder.Services.AddSwaggerGen();
-
-
 
 
 
 var app = builder.Build();
+
+
 
 
 // Configure the HTTP request pipeline.
@@ -131,8 +124,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.UseAuthentication();
+
 
 app.MapControllers();
+app.UseRouting();
+app.MapDefaultControllerRoute();
+
+app.UseAuthorization();
 
 app.Run();
