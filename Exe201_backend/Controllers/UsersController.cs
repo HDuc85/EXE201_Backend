@@ -30,14 +30,10 @@ namespace Exe201_backend.Controllers
     {
         private IUnitOfWork _unitOfWork;
         private IUserService _userService;
-        private IEmailHelper _emailHelper;
-        private IMediaHelper _mediaHelper;
+        
 
-        public UsersController(IUnitOfWork unitOfWork, IUserService userService, IEmailHelper emailHelper,
-            IMediaHelper mediaHelper)
+        public UsersController(IUnitOfWork unitOfWork, IUserService userService)
         {
-            _mediaHelper = mediaHelper;
-            _emailHelper = emailHelper;
             _userService = userService;
             _unitOfWork = unitOfWork;
 
@@ -125,7 +121,7 @@ namespace Exe201_backend.Controllers
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> PutUser([FromForm]UpdateUserRequest updateUserRequest)
         {
            

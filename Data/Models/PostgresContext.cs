@@ -141,11 +141,15 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.ToTable("box");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Thumbnail).HasColumnName("thumbnail");
+
             entity.Property(e => e.Auther).HasColumnName("auther");
             entity.Property(e => e.BoxName)
                 .HasMaxLength(255)
                 .HasColumnName("boxName");
             entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Discount).HasColumnName("discount");
+
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.QuantitySold).HasColumnName("quantitySold");
             entity.Property(e => e.Rate).HasColumnName("rate");

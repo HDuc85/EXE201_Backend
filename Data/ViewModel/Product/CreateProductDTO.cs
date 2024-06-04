@@ -1,7 +1,7 @@
-﻿namespace Service.ViewModel.System
+﻿namespace Data.ViewModel.Product
 {
 
-    public class UpdateProductDTO
+    public class CreateProductDTO
     {
         public string? ProductName { get; set; }
         public int? QuantitySold { get; set; }

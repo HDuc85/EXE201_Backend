@@ -1,7 +1,7 @@
-﻿namespace Service.ViewModel.System
+﻿namespace Data.ViewModel.Product
 {
 
-    public class UpdateProductVariantDTO
+    public class CreateProductVariantDTO
     {
         public string? SizeName { get; set; }
         public string? BrandName { get; set; }

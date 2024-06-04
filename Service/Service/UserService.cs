@@ -20,7 +20,6 @@ namespace Service.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailTemplateReader _emailTemplateReader;
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private readonly RoleManager<Role> _roleManager;
         private readonly IEmailHelper _emailHelper;
         private readonly IMediaHelper _mediaHelper;
@@ -29,7 +28,6 @@ namespace Service.Service
             IMediaHelper mediaHelper,
             IEmailTemplateReader emailTemplateReader,
             UserManager<User> userManager,
-            SignInManager<User> signInManager,
             RoleManager<Role> roleManager,
             IEmailHelper emailHelper)
         {
@@ -37,7 +35,6 @@ namespace Service.Service
             _roleManager = roleManager;
             _emailHelper = emailHelper;
             _emailTemplateReader = emailTemplateReader;
-            _signInManager = signInManager;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
         }
@@ -161,7 +158,7 @@ namespace Service.Service
 
         public async Task<ApiResult<User>> UpdateUser(UpdateUserRequest updateUserRequest)
         {
-            var user =  await _userManager.FindByIdAsync(updateUserRequest.UserId.ToString());
+            var user =  await _userManager.FindByNameAsync(updateUserRequest.Username.ToString());
             if(user == null)
             {
                 return new()
