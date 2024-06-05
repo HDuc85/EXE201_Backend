@@ -207,6 +207,103 @@ namespace Service.Service
             };
         }
 
+        public async Task<ApiResult<List<CartViewModel>>> GetCartBySize(CartBySizeRequest cartBySizeRequest)
+        {
+            var user = await _userManager.FindByNameAsync(cartBySizeRequest.Username);
+            if (user == null)
+            {
+                return new()
+                {
+                    Success = false,
+                    message = $"{cartBySizeRequest.Username} is not exits"
+                };
+            }
+
+            var lcarts = await _unitOfWork.RepositoryCart.GetPageSize(x => x.UserId == user.Id,cartBySizeRequest.PageIndex,cartBySizeRequest.PageSize);
+            if (lcarts.Count() == 0)
+            {
+                return new()
+                {
+                    Success = true,
+                    message = "Cart empty"
+                };
+            }
+
+            var (message, carts) = await CheckQuantity(lcarts.ToList());
+
+            List<CartViewModel> cartUser = new List<CartViewModel>();
+
+            foreach (var cart in carts)
+            {
+                if (cart.ProductVariantId != null)
+                {
+                    var pv = await _unitOfWork.RepositoryProductVariant.GetById(cart.ProductVariantId);
+
+                    var product = await _unitOfWork.RepositoryProduct.GetById(pv.ProductId);
+
+                    ProductVariantViewModel pvModel = null;
+
+
+                    if (pv.SizeId != null)
+                    {
+                        if (pvModel == null) pvModel = new ProductVariantViewModel();
+                        var size = await _unitOfWork.RepositorySize.GetById(pv.SizeId);
+                        pvModel.size = size.SizeValue;
+                    }
+                    if (pv.ColorId != null)
+                    {
+                        if (pvModel == null) pvModel = new ProductVariantViewModel();
+                        var color = await _unitOfWork.RepositoryColor.GetById(pv.ColorId);
+                        pvModel.color = color.ColorValue;
+                    }
+                    if (pv.BrandId != null)
+                    {
+                        if (pvModel == null) pvModel = new ProductVariantViewModel();
+                        var brand = await _unitOfWork.RepositoryBrand.GetById(pv.BrandId);
+                        pvModel.brand = brand.BrandValue;
+                    }
+
+                    cartUser.Add(new CartViewModel
+                    {
+                        Type = "Product",
+                        Name = product.ProductName,
+                        Price = pv.Price,
+                        productVariantViewModel = pvModel,
+                        discount = pv.Discount,
+                        Quantity = cart.Quantity,
+                        thumbnail = pv.Thumbnail,
+                    });
+
+                }
+                if (cart.BoxId != null)
+                {
+                    var box = await _unitOfWork.RepositoryBox.GetById(cart.BoxId);
+                    if (box != null)
+                    {
+
+                        cartUser.Add(new CartViewModel
+                        {
+                            Type = "Box",
+                            thumbnail = box.Thumbnail,
+                            Quantity = cart.Quantity,
+                            Name = box.BoxName,
+                            Price = box.Price,
+                            discount = box.Discount,
+                        });
+                    }
+                }
+
+            }
+
+
+
+            return new()
+            {
+                message = message,
+                Success = true,
+                Value = cartUser
+            };
+        }
         public async Task<ApiResult<bool>> SingleAdd(SingleAddRequest singleAddRequest)
         {
             string message = string.Empty;
@@ -578,5 +675,7 @@ namespace Service.Service
 
         }
 
+
+        
     }
 }

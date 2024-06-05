@@ -16,9 +16,9 @@ namespace Exe201_backend.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICartService _cartService;
-        
-        public CartController(ICartService cartService,IUnitOfWork unitOfWork) { 
-           
+
+        public CartController(ICartService cartService, IUnitOfWork unitOfWork) {
+
             _cartService = cartService;
             _unitOfWork = unitOfWork;
         }
@@ -32,8 +32,8 @@ namespace Exe201_backend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> AddCart([FromBody] CreateCartRequest createCartRequest)
         {
-            var result = await  _cartService.AddCart(createCartRequest);
-            if(!result.Success) 
+            var result = await _cartService.AddCart(createCartRequest);
+            if (!result.Success)
             {
                 return BadRequest(result.message);
             }
@@ -45,7 +45,7 @@ namespace Exe201_backend.Controllers
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        [HttpGet]
+        [HttpGet("{username}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetCart (string username)
         {
@@ -57,6 +57,29 @@ namespace Exe201_backend.Controllers
             }
             return Ok(new { result.message , result.Value});
             
+        }
+        /// <summary>
+        /// Get Cart with page index and size
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        [HttpGet("PageSize")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetCartPageSize(string Username, int PageIndex, int PageSize)
+        {
+            if(PageIndex <= 0 || PageSize <= 0) 
+            {
+                return BadRequest("Page index or Size is not a negative number");
+            }
+            CartBySizeRequest request = new CartBySizeRequest{ Username = Username,PageSize=PageSize,PageIndex = PageIndex};
+            var result = await _cartService.GetCartBySize(request);
+
+            if (!result.Success || result.Value == null)
+            {
+                return BadRequest(result.message);
+            }
+            return Ok(new { result.message, result.Value });
+
         }
         /// <summary>
         /// Add one item to cart 

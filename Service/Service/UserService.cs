@@ -3,6 +3,7 @@ using Data.ViewModel;
 using Data.ViewModel.Authen;
 using Data.ViewModel.Helper;
 using Data.ViewModel.User;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -352,11 +353,7 @@ namespace Service.Service
                 message = "Check your email!"
             };
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="resetPasswordRequest"></param>
-        /// <returns></returns>
+       
         public async Task<ApiResult<bool>> ResetPassword(ResetPasswordRequest resetPasswordRequest)
         {
             var user = await _userManager.FindByEmailAsync(resetPasswordRequest.Email);
@@ -451,7 +448,7 @@ namespace Service.Service
             };
         }
     
-        
+      
     }
 }
 

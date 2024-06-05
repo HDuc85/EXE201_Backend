@@ -100,7 +100,7 @@ namespace Exe201_backend.Controllers
 
         [HttpGet("Search")]
         [Authorize(Roles = "admin")]
-        public async Task<ActionResult<IEnumerable<User>>> GetPageSize(string key, int pageIndex, int pageSize)
+        public async Task<ActionResult<IEnumerable<User>>> Search(string key, int pageIndex, int pageSize)
         {
 
             var users = await _unitOfWork.RepositoryUser.GetPageSize(x => 
