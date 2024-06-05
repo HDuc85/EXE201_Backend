@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Service.Helper;
 using Service.Interface;
 
 namespace Exe201_backend.Controllers
@@ -29,10 +30,12 @@ namespace Exe201_backend.Controllers
         /// <param name="createCartRequest"></param>
         /// <returns></returns>
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> AddCart([FromBody] CreateCartRequest createCartRequest)
         {
-            var result = await _cartService.AddCart(createCartRequest);
+            var username = User.GetUserName();
+            
+            var result = await _cartService.AddCart( username, createCartRequest);
             if (!result.Success)
             {
                 return BadRequest(result.message);
@@ -45,10 +48,13 @@ namespace Exe201_backend.Controllers
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        [HttpGet("{username}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetCart (string username)
+        [HttpGet]
+        [Authorize]
+
+        public async Task<IActionResult> GetCart ()
         {
+            var username = User.GetUserName();
+
             var result = await _cartService.GetCart(username);
 
             if (!result.Success || result.Value == null)
@@ -64,14 +70,16 @@ namespace Exe201_backend.Controllers
         /// <param name="username"></param>
         /// <returns></returns>
         [HttpGet("PageSize")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetCartPageSize(string Username, int PageIndex, int PageSize)
+        [Authorize]
+
+        public async Task<IActionResult> GetCartPageSize(int PageIndex, int PageSize)
         {
+            var username = User.GetUserName();
             if(PageIndex <= 0 || PageSize <= 0) 
             {
                 return BadRequest("Page index or Size is not a negative number");
             }
-            CartBySizeRequest request = new CartBySizeRequest{ Username = Username,PageSize=PageSize,PageIndex = PageIndex};
+            CartBySizeRequest request = new CartBySizeRequest{ Username = username, PageSize=PageSize,PageIndex = PageIndex};
             var result = await _cartService.GetCartBySize(request);
 
             if (!result.Success || result.Value == null)
@@ -87,10 +95,17 @@ namespace Exe201_backend.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost("SingleAdd")]
-        [AllowAnonymous]
-        public async Task<IActionResult> SingleAdd(SingleAddRequest request)
+        [Authorize]
+
+        public async Task<IActionResult> SingleAdd(CartItem request)
         {
-            var result = await _cartService.SingleAdd(request);
+            var username = User.GetUserName();
+            var result = await _cartService.SingleAdd(new SingleAddRequest { 
+                Username = username,
+                Id = request.Id,
+                Quantity = request.Quantity,
+                Type = request.Type
+            });
 
             if (!result.Success)
             {
@@ -100,11 +115,14 @@ namespace Exe201_backend.Controllers
 
         }
         [HttpPut("Update")]
-        [AllowAnonymous]
-        public async Task<IActionResult> UpdateCart([FromBody] UpdateCartRequest updateCartRequest)
+        [Authorize]
+
+        public async Task<IActionResult> UpdateCart([FromBody] List<CartItem> updateCartRequest)
         {
-          
-            foreach(var item in updateCartRequest.Items)
+
+            var username = User.GetUserName();
+            
+            foreach (var item in updateCartRequest)
             {
                 if(item.Type <= 0 || item.Type > 2)
                 {
@@ -121,7 +139,11 @@ namespace Exe201_backend.Controllers
             }
             
             
-            var result = await _cartService.UpdateCart(updateCartRequest);
+            var result = await _cartService.UpdateCart(new UpdateCartRequest
+            {
+                Username=username,
+                Items = updateCartRequest
+            });
 
             if (!result.Success)
             {
@@ -136,10 +158,12 @@ namespace Exe201_backend.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpDelete("ListItem")]
-        [AllowAnonymous]
+        [Authorize]
+
         public async Task<IActionResult> DeleteCart(DeleteCartRequest request)
         {
-            var result = await _cartService.DeleteCart(request);
+            var username = User.GetUserName();
+            var result = await _cartService.DeleteCart(username, request);
 
             if (!result.Success)
             {
@@ -155,10 +179,12 @@ namespace Exe201_backend.Controllers
         /// <param name="Username"></param>
         /// <returns></returns>
         [HttpDelete]
-        [AllowAnonymous]
-        public async Task<IActionResult> DeleteAllCart(string Username)
+        [Authorize]
+
+        public async Task<IActionResult> DeleteAllCart()
         {
-            var result = await _cartService.DeleteAllCart(Username);
+            var username = User.GetUserName();
+            var result = await _cartService.DeleteAllCart(username);
 
             if (!result.Success)
             {

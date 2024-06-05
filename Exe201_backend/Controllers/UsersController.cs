@@ -49,7 +49,7 @@ namespace Exe201_backend.Controllers
 
         public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
         {
-
+           
             var users = await _unitOfWork.RepositoryUser.GetAll();
 
             if (users == null)

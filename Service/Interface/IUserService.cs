@@ -17,5 +17,6 @@ namespace Service.Interface
         Task<bool> SendEmailComfirm(string Url, User user);
         Task<ApiResult<bool>> UpdateRole(UpdateRoleRequest updateRoleRequest);
         Task<ApiResult<User>> UpdateUser(UpdateUserRequest updateUserRequest);
+        Task<User> UserExits(string Username);
     }
 }

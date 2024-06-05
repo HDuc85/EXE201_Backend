@@ -19,10 +19,10 @@ namespace Service.Service
         }
 
 
-        public async Task<ApiResult<bool>> AddCart(CreateCartRequest createCartRequest)
+        public async Task<ApiResult<bool>> AddCart(string username, CreateCartRequest createCartRequest)
         {
 
-            var user = await _userManager.FindByNameAsync(createCartRequest.Username);
+            var user = await _userManager.FindByNameAsync(username);
             if (user == null)
             {
                 return new()
@@ -542,16 +542,16 @@ namespace Service.Service
 
         }
 
-        public async Task<ApiResult<int>> DeleteCart(DeleteCartRequest request)
+        public async Task<ApiResult<int>> DeleteCart(string username, DeleteCartRequest request)
         {
 
-            var user = await _userManager.FindByNameAsync(request.Username);
+            var user = await _userManager.FindByNameAsync(username);
             if (user == null)
             {
                 return new()
                 {
                     Success = false,
-                    message = $"{request.Username} is not exits"
+                    message = $"{username} is not exits"
                 };
             }
 

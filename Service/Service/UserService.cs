@@ -448,7 +448,22 @@ namespace Service.Service
             };
         }
     
-      
+        public async Task<User> UserExits(string Username)
+        {
+            if (Username.IsNullOrEmpty()) 
+            {
+                throw new Exception("Username is not exits");
+            }
+
+            var user = await _userManager.FindByNameAsync(Username);
+            if (user == null)
+            {
+                throw new Exception("Username is not exits");
+            }
+
+            return user;
+
+        }
     }
 }
 
