@@ -83,6 +83,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
     public virtual DbSet<Size> Sizes { get; set; }
 
 
+    public virtual DbSet<PaymentStatus> PaymentStatuses { get; set; }
 
     public virtual DbSet<Status> Statuses { get; set; }
 
@@ -408,6 +409,8 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.Property(e => e.UserId).HasColumnName("userId");
             entity.Property(e => e.VoucherId).HasColumnName("voucherId");
             entity.Property(e => e.ShipPrice).HasColumnName("shipPrice");
+            entity.Property(e => e.StatusId).HasColumnName("statusId");
+            entity.Property(e => e.TrackingNumber).HasColumnName("TrackingNumber");
 
             entity.HasOne(d => d.Voucher).WithMany(p => p.Orders).HasForeignKey(d => d.Id);
             entity.HasOne(d => d.Payment).WithMany(p => p.Orders)
@@ -489,22 +492,16 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.ToTable("paymentDetail");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.AccountNumber)
-                .HasMaxLength(255)
-                .HasColumnName("accountNumber");
             entity.Property(e => e.Amount).HasColumnName("amount");
-            entity.Property(e => e.Description)
-                .HasMaxLength(500)
-                .HasColumnName("description");
-            entity.Property(e => e.PaymentLinkId)
-                .HasMaxLength(255)
-                .HasColumnName("paymentLinkId");
-            entity.Property(e => e.PaymentType)
-                .HasMaxLength(255)
-                .HasColumnName("paymentType");
-            entity.Property(e => e.TransactionDateTime)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("transactionDateTime");
+            entity.Property(e => e.PaymentStatusId).HasColumnName("paymentStatusId");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.CreatedDate).HasColumnName("createdDate");
+            entity.Property(e => e.BankCode).HasColumnName("BankCode");
+            entity.Property(e => e.BankTranNo).HasColumnName("BankTranNo");
+            entity.Property(e => e.PayDate).HasColumnName("PayDate");
+            entity.Property(e => e.TransactionNo).HasColumnName("TransactionNo");
+
+
         });
 
 
@@ -635,8 +632,21 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
                 .HasColumnName("sizeValue");
         });
 
-    
-    
+        modelBuilder.Entity<PaymentStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("paymentStatus_pkey");
+
+            entity.ToTable("paymentStatus");
+
+            entity.HasIndex(e => e.Status, "paymentStatus_status_key").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.Status)
+                .HasMaxLength(255)
+                .HasColumnName("status");
+        });
+
         modelBuilder.Entity<Status>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("status_pkey");

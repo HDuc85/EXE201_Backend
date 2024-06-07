@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Service.Helper;
+using Service.Helper.Header;
 using Service.Interface;
 
 namespace Exe201_backend.Controllers

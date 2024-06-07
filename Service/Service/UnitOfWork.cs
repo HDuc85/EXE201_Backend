@@ -30,6 +30,10 @@ namespace Service.Service
         Repository<BoxMedia> _repositoryBoxMedia;
         Repository<ProductMedia> _repositoryProductMedia;
         Repository<FeedbackMedia> _repositoryFeedbackMedia;
+        Repository<PaymentDetail> _repositoryPaymentDetail;
+        Repository<PaymentStatus> _repositoryPaymentStatus;
+       
+
 
         Repository<Size> _repositorySize;
         Repository<Color> _repositoryColor;
@@ -71,6 +75,8 @@ namespace Service.Service
         public Repository<Color> RepositoryColor { get { return _repositoryColor ??= new Repository<Color>(_postgresContext); } }
         public Repository<Brand> RepositoryBrand { get { return _repositoryBrand ??= new Repository<Brand>(_postgresContext); } }
 
+        public Repository<PaymentStatus> RepositoryPaymentStatus { get { return _repositoryPaymentStatus ??= new Repository<PaymentStatus>(_postgresContext); } }
+        public Repository<PaymentDetail> RepositoryPaymentDetail { get { return _repositoryPaymentDetail ??= new Repository<PaymentDetail>(_postgresContext); } }
 
         public async Task CommitAsync()
         {

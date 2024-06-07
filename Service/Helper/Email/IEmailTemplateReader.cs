@@ -1,5 +1,4 @@
-﻿
-namespace Service.Helper
+﻿namespace Service.Helper.Email
 {
     public interface IEmailTemplateReader
     {

@@ -1,4 +1,4 @@
-﻿namespace Service.Helper
+﻿namespace Service.Helper.Media
 {
     public static class FileValidationHelper
     {

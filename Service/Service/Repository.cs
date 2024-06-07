@@ -79,6 +79,7 @@ namespace Service.Service
             entityEntry.State = Microsoft.EntityFrameworkCore.EntityState.Modified;
         }
 
+       
 
         public virtual IQueryable<T> Table => _postgresContext.Set<T>();   
 

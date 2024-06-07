@@ -10,7 +10,8 @@ using Data.ViewModel.Authen;
 using Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Data.ViewModel.Helper;
-using Service.Helper;
+using Service.Helper.Email;
+using Service.Helper.Media;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -97,6 +98,9 @@ builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 builder.Services.AddScoped<ITokenHandler, TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();

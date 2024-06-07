@@ -30,6 +30,8 @@ namespace Service.Interface
         Repository<Size> RepositorySize { get; }
         Repository<Color> RepositoryColor { get; }
         Repository<Brand> RepositoryBrand { get; }
+        Repository<PaymentStatus> RepositoryPaymentStatus { get; }
+        Repository<PaymentDetail> RepositoryPaymentDetail { get; }
 
         Task CommitAsync();
     }
