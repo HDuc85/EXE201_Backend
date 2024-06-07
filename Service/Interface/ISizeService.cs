@@ -1,6 +1,5 @@
 ﻿using Data.Models;
 using Microsoft.AspNetCore.Mvc;
-using Service.ViewModel.System;
 
 namespace Service.Repo
 {

@@ -49,13 +49,13 @@ namespace Service.Service
                         }
                         else
                         {
-                            if(productVariantRequest.Quantity > 0)
-                            carts.Add(new Cart
-                            {
-                                UserId = user.Id,
-                                ProductVariantId = productVariantRequest.ProductVarianItemId,
-                                Quantity = productVariantRequest.Quantity,
-                            });
+                            if (productVariantRequest.Quantity > 0)
+                                carts.Add(new Cart
+                                {
+                                    UserId = user.Id,
+                                    ProductVariantId = productVariantRequest.ProductVarianItemId,
+                                    Quantity = productVariantRequest.Quantity,
+                                });
                         }
                     }
                 }
@@ -77,11 +77,11 @@ namespace Service.Service
                         {
                             if (boxRequest.Quantity > 0)
                                 carts.Add(new Cart
-                            {
-                                UserId = user.Id,
-                                BoxId = boxRequest.BoxId,
-                                Quantity = boxRequest.Quantity,
-                            });
+                                {
+                                    UserId = user.Id,
+                                    BoxId = boxRequest.BoxId,
+                                    Quantity = boxRequest.Quantity,
+                                });
                         }
 
                     }
@@ -219,7 +219,7 @@ namespace Service.Service
                 };
             }
 
-            var lcarts = await _unitOfWork.RepositoryCart.GetPageSize(x => x.UserId == user.Id,cartBySizeRequest.PageIndex,cartBySizeRequest.PageSize);
+            var lcarts = await _unitOfWork.RepositoryCart.GetPageSize(x => x.UserId == user.Id, cartBySizeRequest.PageIndex, cartBySizeRequest.PageSize);
             if (lcarts.Count() == 0)
             {
                 return new()
@@ -318,7 +318,7 @@ namespace Service.Service
                 };
             }
 
-            if(singleAddRequest.Type != null)
+            if (singleAddRequest.Type != null)
             {
                 if (singleAddRequest.Type == 1 && singleAddRequest.Quantity > 0)
                 {
@@ -328,7 +328,8 @@ namespace Service.Service
                         var pv = await _unitOfWork.RepositoryProductVariant.GetById(pvId.ProductVariantId);
                         var product = await _unitOfWork.RepositoryProduct.GetById(pv.ProductId);
                         if (pv.Quantity >= singleAddRequest.Quantity)
-                        { pvId.Quantity = singleAddRequest.Quantity;
+                        {
+                            pvId.Quantity = singleAddRequest.Quantity;
                             message += $"{product.ProductName} with Sizeid:{pv.SizeId} / BrandId: {pv.BrandId}/ Color: {pv.ColorId} set quantity to {singleAddRequest.Quantity} \n";
                         }
                         else
@@ -344,14 +345,15 @@ namespace Service.Service
 
                         if (pv != null)
                         {
-                            if(pv.Quantity >= singleAddRequest.Quantity)
+                            if (pv.Quantity >= singleAddRequest.Quantity)
                             {
-                                message += $"{product.ProductName } with Sizeid:{pv.SizeId} / BrandId: {pv.BrandId}/ Color: {pv.ColorId} added with quantity : {singleAddRequest.Quantity}";
-                                    await _unitOfWork.RepositoryCart.Insert(new Cart { 
-                                        ProductVariantId = singleAddRequest.Id,  
-                                        Quantity = singleAddRequest.Quantity,
-                                        UserId = user.Id
-                                    });
+                                message += $"{product.ProductName} with Sizeid:{pv.SizeId} / BrandId: {pv.BrandId}/ Color: {pv.ColorId} added with quantity : {singleAddRequest.Quantity}";
+                                await _unitOfWork.RepositoryCart.Insert(new Cart
+                                {
+                                    ProductVariantId = singleAddRequest.Id,
+                                    Quantity = singleAddRequest.Quantity,
+                                    UserId = user.Id
+                                });
                             }
                             else
                             {
@@ -361,7 +363,7 @@ namespace Service.Service
                                     Quantity = pv.Quantity,
                                     UserId = user.Id
                                 });
-                              
+
                                 message += $"{product.ProductName} with Sizeid:{pv.SizeId} / BrandId: {pv.BrandId}/ Color: {pv.ColorId} is have only {pv.Quantity}  \n";
 
                             }
@@ -442,7 +444,7 @@ namespace Service.Service
                 return new()
                 {
                     Success = true,
-                    message = message.IsNullOrEmpty()?"Nothing change!":message
+                    message = message.IsNullOrEmpty() ? "Nothing change!" : message
                 };
             }
             catch (Exception ex)
@@ -676,6 +678,6 @@ namespace Service.Service
         }
 
 
-        
+
     }
 }

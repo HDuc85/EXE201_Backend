@@ -1,10 +1,10 @@
 ﻿using Data.Models;
+using Data.ViewModel.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Service.Interface;
 using Service.Repo;
-using Service.ViewModel.System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 

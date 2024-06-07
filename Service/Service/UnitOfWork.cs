@@ -23,8 +23,6 @@ namespace Service.Service
         Repository<OrderStatusLog> _repositoryOrderStatusLog;
         Repository<Box> _repositoryBox;
         Repository<BoxItem> _repositoryBoxItem;
-        Repository<Product> _repositoryProduct;
-        Repository<ProductVariant> _repositoryProductVariant;
         Repository<Feedback> _repositoryFeedback;
         Repository<Tag> _repositoryTag;
         Repository<ProductTag> _repositoryProductTag;
@@ -35,10 +33,6 @@ namespace Service.Service
         Repository<BoxMedia> _repositoryBoxMedia;
         Repository<ProductMedia> _repositoryProductMedia;
         Repository<FeedbackMedia> _repositoryFeedbackMedia;
-
-        Repository<Size> _repositorySize;
-        Repository<Color> _repositoryColor;
-        Repository<Brand> _repositoryBrand;
 
 
 
@@ -76,17 +70,10 @@ namespace Service.Service
         public Repository<Color> RepositoryColor { get { return _repositoryColor ??= new Repository<Color>(_postgresContext); } }
         public Repository<Brand> RepositoryBrand { get { return _repositoryBrand ??= new Repository<Brand>(_postgresContext); } }
 
-        public Repository<Product> RepositoryProduct { get { return _repositoryProduct ??= new Repository<Product>(_postgresContext); } }
-
         public Repository<ProductVariant> RepositoryVariant { get { return _repositoryProductVariant ??= new Repository<ProductVariant>(_postgresContext); } }
 
-        public Repository<Size> RepositorySize { get { return _repositorySize ??= new Repository<Size>(_postgresContext); } }
+    
 
-        public Repository<Brand> RepositoryBrand { get { return _repositoryBrand ??= new Repository<Brand>(_postgresContext); } }
-
-        public Repository<Color> RepositoryColor { get { return _repositoryColor ??= new Repository<Color>(_postgresContext);
-    }
-}
 
 public async Task CommitAsync()
         {

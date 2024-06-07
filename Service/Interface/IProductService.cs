@@ -1,6 +1,6 @@
 ﻿using Data.Models;
+using Data.ViewModel.Product;
 using Microsoft.AspNetCore.Mvc;
-using Service.ViewModel.System;
 
 namespace Service.Repo
 {

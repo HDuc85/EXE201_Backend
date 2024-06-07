@@ -109,14 +109,12 @@ builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ITokenHandler, TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
-<<<<<<< Updated upstream
-=======
+
 builder.Services.AddScoped<IMediaHelper, MediaHelper>();
 
 builder.Services.AddScoped<IBoxService, BoxService>();
 
 
->>>>>>> Stashed changes
 builder.Services.AddScoped<PasswordHasher<User>>();
 //Add validator
 builder.Services.AddScoped<IValidator<LoginRequest>, LoginValidator>();
