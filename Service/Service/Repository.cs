@@ -24,6 +24,17 @@ namespace Service.Service
                 return await _postgresContext.Set<T>().ToListAsync();
              return await _postgresContext.Set<T>().Where(expression).ToListAsync();
         }
+        public async Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null,int pageIndex = 1, int pageSize = 5)
+        {
+            if (pageIndex == 0) pageIndex = 1;
+            if (pageSize == 0) pageSize = 5;
+
+            if (expression == null)
+            {
+                return await _postgresContext.Set<T>().Skip((pageIndex -1 ) * pageSize).Take(pageSize).ToListAsync();
+            }
+            return await _postgresContext.Set<T>().Where(expression).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+        }
 
         public async Task<T> GetById(object id)
         {
@@ -67,6 +78,7 @@ namespace Service.Service
             EntityEntry entityEntry = _postgresContext.Entry<T>(entity);
             entityEntry.State = Microsoft.EntityFrameworkCore.EntityState.Modified;
         }
+
 
         public virtual IQueryable<T> Table => _postgresContext.Set<T>();   
 
