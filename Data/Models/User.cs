@@ -6,10 +6,6 @@ namespace Data.Models;
 
 public partial class User : IdentityUser<Guid>
 {
-    
-   
-  
-
     public string? Firstname { get; set; }
 
     public string? Lastname { get; set; }

@@ -1,6 +1,5 @@
 using Exe201_backend;
 using Microsoft.OpenApi.Models;
-
 using Service.Service;
 using Service.Interface;
 using System.Reflection;
@@ -110,17 +109,19 @@ builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<ITokenHandler, TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
+<<<<<<< Updated upstream
+=======
+builder.Services.AddScoped<IMediaHelper, MediaHelper>();
+
+builder.Services.AddScoped<IBoxService, BoxService>();
+
+
+>>>>>>> Stashed changes
 builder.Services.AddScoped<PasswordHasher<User>>();
 //Add validator
 builder.Services.AddScoped<IValidator<LoginRequest>, LoginValidator>();
 
-
-
-
 var app = builder.Build();
-
-
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
