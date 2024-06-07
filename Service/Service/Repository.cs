@@ -74,5 +74,9 @@ namespace Service.Service
         {
            await _postgresContext.SaveChangesAsync();
         }
+        public void RemoveRange(IEnumerable<T> entities) // Implement this method
+        {
+            _postgresContext.RemoveRange(entities);
+        }
     }
 }

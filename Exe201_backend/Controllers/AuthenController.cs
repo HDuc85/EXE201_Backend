@@ -2,10 +2,10 @@
 using Data.ViewModel.System;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interface;
-
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Exe201_backend.Controllers
 {
@@ -13,16 +13,17 @@ namespace Exe201_backend.Controllers
     [ApiController]
     public class AuthenController : ControllerBase
     {
+        private readonly IUserService _userService;
+        private readonly ITokenHandler _tokenHandler;
+        private readonly IValidator<LoginRequest> _validator;
 
-        IUserService _userService;
-        ITokenHandler _tokenHandler;
-      
-        public AuthenController(IUserService userService, ITokenHandler tokenHandler)
+        public AuthenController(IUserService userService, ITokenHandler tokenHandler, IValidator<LoginRequest> validator)
         {
             _userService = userService;
             _tokenHandler = tokenHandler;
-          
+            _validator = validator;
         }
+
         /// <summary>
         /// Login with Username and password
         /// </summary>
@@ -30,10 +31,10 @@ namespace Exe201_backend.Controllers
         /// <returns></returns>
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(IValidator<LoginRequest> validator, [FromBody] LoginRequest loginRequest)
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            var validations = await validator.ValidateAsync(loginRequest);
-            if(!validations.IsValid)
+            var validations = await _validator.ValidateAsync(loginRequest);
+            if (!validations.IsValid)
             {
                 return BadRequest(validations.Errors.Select(x => new ErrorValidation
                 {
@@ -44,15 +45,13 @@ namespace Exe201_backend.Controllers
 
             var apiResult = await _userService.CheckLogin(loginRequest);
 
-            if(!apiResult.Success)
+            if (!apiResult.Success)
             {
                 return Unauthorized(apiResult.message);
             }
 
             (string accessToken, DateTime expiredDateAccessToken) = await _tokenHandler.CreateAccessToken(apiResult.Value);
             (string refreshToken, DateTime expiredDateRefreshToken, string codeRefreshToken) = await _tokenHandler.CreateRefreshToken(apiResult.Value);
-
-            
 
             return Ok(new JwtModel
             {
@@ -63,6 +62,7 @@ namespace Exe201_backend.Controllers
                 AccessTokenExpiredDate = expiredDateAccessToken
             });
         }
+
         /// <summary>
         /// Make new access token with refresh token
         /// </summary>

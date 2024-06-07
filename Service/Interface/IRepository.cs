@@ -13,5 +13,6 @@ namespace Service.Interface
         Task Insert(IEnumerable<T> entities);
         Task Insert(T entity);
         void Update(T entity);
+        void RemoveRange(IEnumerable<T> entities);
     }
 }
