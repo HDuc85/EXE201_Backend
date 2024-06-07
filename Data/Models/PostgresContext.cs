@@ -41,11 +41,8 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
     public virtual DbSet<FeedbackMedia> FeedbackMedia { get; set; }
 
 
-    public virtual DbSet<Item> Items { get; set; }
-
-    public virtual DbSet<ItemMedia> ItemMedia { get; set; }
-
-    public virtual DbSet<ItemType> ItemTypes { get; set; }
+   public virtual DbSet<ProductMedia> ProductMedia { get; set; }
+    public virtual DbSet<BoxMedia> BoxMedia { get; set; }
 
     public virtual DbSet<MediaType> MediaTypes { get; set; }
 
@@ -144,11 +141,15 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.ToTable("box");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Thumbnail).HasColumnName("thumbnail");
+
             entity.Property(e => e.Auther).HasColumnName("auther");
             entity.Property(e => e.BoxName)
                 .HasMaxLength(255)
                 .HasColumnName("boxName");
             entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Discount).HasColumnName("discount");
+
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.QuantitySold).HasColumnName("quantitySold");
             entity.Property(e => e.Rate).HasColumnName("rate");
@@ -177,6 +178,45 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
                 .HasForeignKey(d => d.ProductVariantId)
                 .HasConstraintName("boxItem_productVariantId_fkey");
         });
+
+        modelBuilder.Entity<BoxMedia>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("boxMedia_pkey");
+
+            entity.ToTable("boxMedia");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.BoxId).HasColumnName("boxId");
+            entity.Property(e => e.MediaId).HasColumnName("mediaId");
+
+            
+
+            entity.HasOne(d => d.Box).WithMany(p => p.BoxMedias)
+                .HasForeignKey(d => d.BoxId);
+            entity.HasOne(d => d.Media).WithMany(p => p.BoxMedia).HasForeignKey(d => d.MediaId);
+                
+        });
+        modelBuilder.Entity<ProductMedia>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("productMedia_pkey");
+
+            entity.ToTable("productMedia");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.MediaId).HasColumnName("mediaId");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.ProductMedia)
+                .HasForeignKey(d => d.ProductId)
+                ;
+
+            entity.HasOne(d => d.Media).WithMany(p => p.ProductMedia)
+                .HasForeignKey(d => d.MediaId);
+        });
+
+
 
         modelBuilder.Entity<BoxTag>(entity =>
         {
@@ -238,13 +278,16 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.ToTable("cart");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ItemId).HasColumnName("itemId");
+            entity.Property(e => e.BoxId).HasColumnName("boxId");
+
+            entity.Property(e => e.ProductVariantId).HasColumnName("productVariantId");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
-            entity.HasOne(d => d.Item).WithMany(p => p.Carts)
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("cart_itemId_fkey");
+            entity.HasOne(d => d.ProductVariant).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.ProductVariantId);
+            entity.HasOne(d => d.Box).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.BoxId);
         });
 
     
@@ -272,14 +315,17 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ItemId).HasColumnName("itemId");
+            entity.Property(e => e.BoxId).HasColumnName("boxId");
+            entity.Property(e => e.ProductVariantId).HasColumnName("productVariantId");
             entity.Property(e => e.OrderId).HasColumnName("orderId");
             entity.Property(e => e.Rate).HasColumnName("rate");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
-            entity.HasOne(d => d.Item).WithMany(p => p.Feedbacks)
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("feedback_itemId_fkey");
+            entity.HasOne(d => d.Box).WithMany(p => p.Feedbacks)
+                .HasForeignKey(d => d.BoxId);
+            entity.HasOne(d => d.ProductVariant).WithMany(p => p.Feedbacks)
+                .HasForeignKey(d => d.ProductVariantId);
+
 
             entity.HasOne(d => d.Order).WithMany(p => p.Feedbacks)
                 .HasForeignKey(d => d.OrderId)
@@ -311,65 +357,10 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
         });
 
     
-        modelBuilder.Entity<Item>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("item_pkey");
+       
 
-            entity.ToTable("item");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.BoxId).HasColumnName("boxId");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ItemTypeId).HasColumnName("itemTypeId");
-            entity.Property(e => e.ProductId).HasColumnName("productId");
-
-            entity.HasOne(d => d.Box).WithMany(p => p.Items)
-                .HasForeignKey(d => d.BoxId)
-                .HasConstraintName("item_boxId_fkey");
-
-            entity.HasOne(d => d.ItemType).WithMany(p => p.Items)
-                .HasForeignKey(d => d.ItemTypeId)
-                .HasConstraintName("item_itemTypeId_fkey");
-
-            entity.HasOne(d => d.Product).WithMany(p => p.Items)
-                .HasForeignKey(d => d.ProductId)
-                .HasConstraintName("item_productId_fkey");
-        });
-
-        modelBuilder.Entity<ItemMedia>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("itemMedia_pkey");
-
-            entity.ToTable("itemMedia");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ItemId).HasColumnName("itemId");
-            entity.Property(e => e.MediaId).HasColumnName("mediaId");
-
-            entity.HasOne(d => d.Item).WithMany(p => p.ItemMedia)
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("itemMedia_itemId_fkey");
-
-            entity.HasOne(d => d.Media).WithMany(p => p.ItemMedia)
-                .HasForeignKey(d => d.MediaId)
-                .HasConstraintName("itemMedia_mediaId_fkey");
-        });
-
-        modelBuilder.Entity<ItemType>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("itemType_pkey");
-
-            entity.ToTable("itemType");
-
-            entity.HasIndex(e => e.Type, "itemType_type_key").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.Type)
-                .HasMaxLength(255)
-                .HasColumnName("type");
-        });
+       
+       
 
         modelBuilder.Entity<MediaType>(entity =>
         {
@@ -431,20 +422,23 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
         modelBuilder.Entity<OrderItem>(entity =>
         {
             entity
-                .HasNoKey()
-                .ToTable("orderItem");
+                .HasKey(e  => e.Id)
+                .HasName("orderItem_pkey");
+            entity.ToTable("orderItem");
 
-            entity.Property(e => e.ItemId).HasColumnName("itemId");
+            entity.Property(e => e.BoxId).HasColumnName("boxId");
+            entity.Property(e => e.ProductVariantId).HasColumnName("productVariantId");
+
             entity.Property(e => e.OrderId).HasColumnName("orderId");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.Price).HasColumnName("price");
 
-            entity.HasOne(d => d.Item).WithMany()
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("orderItem_itemId_fkey");
+            entity.HasOne(d => d.ProductVariant).WithMany(d => d.OrderItem)
+                .HasForeignKey(d => d.ProductVariantId);
 
-            entity.HasOne(d => d.Order).WithMany()
-                .HasForeignKey(d => d.OrderId)
-                .HasConstraintName("orderItem_orderId_fkey");
+            entity.HasOne(d => d.Order).WithMany(d => d.OrderItems)
+                .HasForeignKey(d => d.OrderId);
+               
         });
 
         modelBuilder.Entity<OrderStatus>(entity =>
@@ -688,13 +682,15 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ItemId).HasColumnName("itemId");
+            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.BoxId).HasColumnName("boxId");
+
             entity.Property(e => e.StoreId).HasColumnName("storeId");
 
-            entity.HasOne(d => d.Item).WithMany(p => p.StoreItems)
-                .HasForeignKey(d => d.ItemId)
-                .HasConstraintName("storeItem_itemId_fkey");
-
+            entity.HasOne(d => d.Product).WithMany(p => p.StoreItems)
+                .HasForeignKey(d => d.ProductId);
+            entity.HasOne(d => d.Box).WithMany(p => p.StoreItems)
+               .HasForeignKey(d => d.BoxId);
             entity.HasOne(d => d.Store).WithMany(p => p.StoreItems)
                 .HasForeignKey(d => d.StoreId)
                 .HasConstraintName("storeItem_storeId_fkey");
@@ -776,6 +772,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.Property(e => e.Firstname)
                 .HasMaxLength(256)
                 .HasColumnName("firstname");
+            entity.Property(e => e.Avatar).HasColumnName("avatar");
             entity.Property(e => e.Lastname)
                 .HasMaxLength(256)
                 .HasColumnName("lastname");

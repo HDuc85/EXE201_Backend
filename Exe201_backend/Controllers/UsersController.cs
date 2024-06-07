@@ -18,6 +18,7 @@ using Data.ViewModel.Helper;
 using System.ComponentModel.Design;
 using System.Diagnostics.CodeAnalysis;
 using Data.ViewModel.System;
+using Microsoft.OpenApi.Expressions;
 
 namespace Exe201_backend.Controllers
 {
@@ -29,14 +30,10 @@ namespace Exe201_backend.Controllers
     {
         private IUnitOfWork _unitOfWork;
         private IUserService _userService;
-        private IEmailHelper _emailHelper;
-        private IMediaHelper _mediaHelper;
+        
 
-        public UsersController(IUnitOfWork unitOfWork, IUserService userService, IEmailHelper emailHelper,
-            IMediaHelper mediaHelper)
+        public UsersController(IUnitOfWork unitOfWork, IUserService userService)
         {
-            _mediaHelper = mediaHelper;
-            _emailHelper = emailHelper;
             _userService = userService;
             _unitOfWork = unitOfWork;
 
@@ -52,7 +49,7 @@ namespace Exe201_backend.Controllers
 
         public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()
         {
-
+           
             var users = await _unitOfWork.RepositoryUser.GetAll();
 
             if (users == null)
@@ -103,7 +100,7 @@ namespace Exe201_backend.Controllers
 
         [HttpGet("Search")]
         [Authorize(Roles = "admin")]
-        public async Task<ActionResult<IEnumerable<User>>> GetPageSize(string key, int pageIndex, int pageSize)
+        public async Task<ActionResult<IEnumerable<User>>> Search(string key, int pageIndex, int pageSize)
         {
 
             var users = await _unitOfWork.RepositoryUser.GetPageSize(x => 
@@ -125,9 +122,9 @@ namespace Exe201_backend.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut]
         [Authorize]
-        public async Task<IActionResult> PutUser([FromBody]UpdateUserRequest updateUserRequest)
+        public async Task<IActionResult> PutUser([FromForm]UpdateUserRequest updateUserRequest)
         {
-
+           
           var  results =  await _userService.UpdateUser(updateUserRequest);
             if (!results.Success)
             {

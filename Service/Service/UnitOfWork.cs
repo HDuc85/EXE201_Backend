@@ -16,6 +16,33 @@ namespace Service.Service
         Repository<Color> _repositoryColor;
         Repository<UserStatusLog> _repositoryUserStatusLog;
         Repository<Status> _repositoryStatus;
+        Repository<Cart> _repositoryCart;
+        Repository<Order> _repositoryOrder;
+        Repository<OrderItem> _repositoryOrderItem;
+        Repository<OrderStatus> _repositoryOrderStatus;
+        Repository<OrderStatusLog> _repositoryOrderStatusLog;
+        Repository<Box> _repositoryBox;
+        Repository<BoxItem> _repositoryBoxItem;
+        Repository<Product> _repositoryProduct;
+        Repository<ProductVariant> _repositoryProductVariant;
+        Repository<Feedback> _repositoryFeedback;
+        Repository<Tag> _repositoryTag;
+        Repository<ProductTag> _repositoryProductTag;
+        Repository<BoxTag> _repositoryBoxTag;
+        Repository<Media> _repositoryMedia;
+        Repository<TagValue> _repositoryTagValue;
+        Repository<MediaType> _repositoryMediaType;
+        Repository<BoxMedia> _repositoryBoxMedia;
+        Repository<ProductMedia> _repositoryProductMedia;
+        Repository<FeedbackMedia> _repositoryFeedbackMedia;
+
+        Repository<Size> _repositorySize;
+        Repository<Color> _repositoryColor;
+        Repository<Brand> _repositoryBrand;
+
+
+
+
         private bool disposedValue;
 
         public UnitOfWork(PostgresContext postgresContext)
@@ -26,6 +53,28 @@ namespace Service.Service
         public Repository<User> RepositoryUser {  get { return _repositoryUser ??= new Repository<User>(_postgresContext); } }
         public Repository<UserStatusLog> RepositoryUserStatusLog { get { return _repositoryUserStatusLog ??= new Repository<UserStatusLog>(_postgresContext); } }
         public Repository<Status> RepositoryStatus { get { return _repositoryStatus ??= new Repository<Status>(_postgresContext); } }
+        public Repository<Cart> RepositoryCart { get { return _repositoryCart ??= new Repository<Cart>(_postgresContext); } }
+        public Repository<Order> RepositoryOrder { get { return _repositoryOrder ??= new Repository<Order>(_postgresContext); } }
+        public Repository<OrderItem> RepositoryOrderItem { get { return _repositoryOrderItem ??= new Repository<OrderItem>(_postgresContext); } }
+        public Repository<OrderStatus> RepositoryOrderStatus { get { return _repositoryOrderStatus ??= new Repository<OrderStatus>(_postgresContext); } }
+        public Repository<OrderStatusLog> RepositoryOrderStatusLog  { get { return _repositoryOrderStatusLog ??= new Repository<OrderStatusLog>(_postgresContext); } }
+        public Repository<Box> RepositoryBox { get { return _repositoryBox ??= new Repository<Box>(_postgresContext); } }
+        public Repository<BoxItem> RepositoryBoxItem { get { return _repositoryBoxItem ??= new Repository<BoxItem>(_postgresContext); } }
+        public Repository<Product> RepositoryProduct { get { return _repositoryProduct ??= new Repository<Product>(_postgresContext); } }
+        public Repository<ProductVariant> RepositoryProductVariant { get { return _repositoryProductVariant ??= new Repository<ProductVariant>(_postgresContext); } }
+        public Repository<Feedback> RepositoryFeedback { get { return _repositoryFeedback ??= new Repository<Feedback>(_postgresContext); } }
+        public Repository<Tag> RepositoryTag { get { return _repositoryTag ??= new Repository<Tag>(_postgresContext); } }
+        public Repository<ProductTag> RepositoryProductTag { get { return _repositoryProductTag ??= new Repository<ProductTag>(_postgresContext); } }
+        public Repository<BoxTag> RepositoryBoxTag { get { return _repositoryBoxTag ??= new Repository<BoxTag>(_postgresContext); } }
+        public Repository<Media> RepositoryMedia { get { return _repositoryMedia ??= new Repository<Media>(_postgresContext); } }
+        public Repository<TagValue> RepositoryTagValue { get { return _repositoryTagValue ??= new Repository<TagValue>(_postgresContext); } }
+        public Repository<MediaType> RepositoryMediaType { get { return _repositoryMediaType ??= new Repository<MediaType>(_postgresContext); } }
+        public Repository<BoxMedia> RepositoryBoxMedia { get { return _repositoryBoxMedia ??= new Repository<BoxMedia>(_postgresContext); } }
+        public Repository<ProductMedia> RepositoryProductMedia { get { return _repositoryProductMedia ??= new Repository<ProductMedia>(_postgresContext); } }
+        public Repository<FeedbackMedia> RepositoryFeedbackMedia { get { return _repositoryFeedbackMedia ??= new Repository<FeedbackMedia>(_postgresContext); } }
+        public Repository<Size> RepositorySize { get { return _repositorySize ??= new Repository<Size>(_postgresContext); } }
+        public Repository<Color> RepositoryColor { get { return _repositoryColor ??= new Repository<Color>(_postgresContext); } }
+        public Repository<Brand> RepositoryBrand { get { return _repositoryBrand ??= new Repository<Brand>(_postgresContext); } }
 
         public Repository<Product> RepositoryProduct { get { return _repositoryProduct ??= new Repository<Product>(_postgresContext); } }
 

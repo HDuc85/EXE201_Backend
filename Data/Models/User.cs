@@ -18,6 +18,8 @@ public partial class User : IdentityUser<Guid>
 
     public DateOnly? Birthday { get; set; }
 
+    public string? Avatar { get; set; }
+
     public virtual ICollection<Box> Boxes { get; set; } = new List<Box>();
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();

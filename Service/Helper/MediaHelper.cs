@@ -18,7 +18,7 @@ namespace Service.Helper
 
         }
 
-        public async Task<ReturnMediaModel> SaveMedia(IFormFile file)
+        public async Task<ReturnMediaModel> SaveMedia(IFormFile file,string path)
         {
             var type = ValidateFile(file);
             if (type.IsNullOrEmpty())
@@ -37,7 +37,7 @@ namespace Service.Helper
                         AuthTokenAsyncFactory = () => Task.FromResult(signin.FirebaseToken),
                         ThrowOnCancel = true,
                     })
-                    .Child("data")
+                    .Child(path)
                     .Child(type)
                     .Child(storagePath)
                     .PutAsync(stream);
@@ -48,12 +48,12 @@ namespace Service.Helper
             };
 
         }
-        public async Task<List<ReturnMediaModel>> SaveMedias(List<IFormFile> files)
+        public async Task<List<ReturnMediaModel>> SaveMedias(List<IFormFile> files,string path)
         {
             List<ReturnMediaModel> result = new List<ReturnMediaModel>();
             foreach (var file in files)
             {
-                result.Add(await SaveMedia(file));
+                result.Add(await SaveMedia(file,path));
             }
             return result;
         }

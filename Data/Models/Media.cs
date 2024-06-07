@@ -15,7 +15,9 @@ public partial class Media
 
     public virtual ICollection<FeedbackMedia> FeedbackMedia { get; set; } = new List<FeedbackMedia>();
 
-    public virtual ICollection<ItemMedia> ItemMedia { get; set; } = new List<ItemMedia>();
+    public virtual ICollection<BoxMedia> BoxMedia { get; set; } = new List<BoxMedia>();
+    public virtual ICollection<ProductMedia> ProductMedia { get; set; } = new List<ProductMedia>();
+
 
     public virtual MediaType? MediaType { get; set; }
 }

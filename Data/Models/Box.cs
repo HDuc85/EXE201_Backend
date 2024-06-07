@@ -16,6 +16,8 @@ public partial class Box
     public string? Description { get; set; }
 
     public double? Price { get; set; }
+    public string? Thumbnail {  get; set; }
+    public double? Discount { get; set; }
 
     public Guid? Auther { get; set; }
 
@@ -24,6 +26,11 @@ public partial class Box
     public virtual ICollection<BoxItem> BoxItems { get; set; } = new List<BoxItem>();
 
     public virtual ICollection<BoxTag> BoxTags { get; set; } = new List<BoxTag>();
+    public virtual ICollection<StoreItem> StoreItems { get; set; } = new List<StoreItem>();
+    public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
+    public virtual ICollection<BoxMedia> BoxMedias { get; set; } = new List<BoxMedia>();
+    public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
-    public virtual ICollection<Item> Items { get; set; } = new List<Item>();
+
 }

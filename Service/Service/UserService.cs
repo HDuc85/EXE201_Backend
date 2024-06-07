@@ -3,9 +3,11 @@ using Data.ViewModel;
 using Data.ViewModel.Authen;
 using Data.ViewModel.Helper;
 using Data.ViewModel.User;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Win32;
 using Service.Helper;
 using Service.Interface;
@@ -19,21 +21,21 @@ namespace Service.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailTemplateReader _emailTemplateReader;
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private readonly RoleManager<Role> _roleManager;
         private readonly IEmailHelper _emailHelper;
+        private readonly IMediaHelper _mediaHelper;
 
         public UserService(IUnitOfWork unitOfWork,
+            IMediaHelper mediaHelper,
             IEmailTemplateReader emailTemplateReader,
             UserManager<User> userManager,
-            SignInManager<User> signInManager,
             RoleManager<Role> roleManager,
             IEmailHelper emailHelper)
         {
+            _mediaHelper = mediaHelper;
             _roleManager = roleManager;
             _emailHelper = emailHelper;
             _emailTemplateReader = emailTemplateReader;
-            _signInManager = signInManager;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
         }
@@ -157,7 +159,7 @@ namespace Service.Service
 
         public async Task<ApiResult<User>> UpdateUser(UpdateUserRequest updateUserRequest)
         {
-            var user =  await _userManager.FindByIdAsync(updateUserRequest.UserId.ToString());
+            var user =  await _userManager.FindByNameAsync(updateUserRequest.Username.ToString());
             if(user == null)
             {
                 return new()
@@ -170,6 +172,7 @@ namespace Service.Service
             DateOnly today = DateOnly.FromDateTime(DateTime.Today);
             DateOnly minDate = today.AddYears(-60); 
             DateOnly maxDate = today.AddYears(-18);
+            if (updateUserRequest.BirthDay.HasValue)
             if (!(updateUserRequest.BirthDay <= maxDate) || !(updateUserRequest.BirthDay >= minDate))
             {
                 return new()
@@ -178,11 +181,50 @@ namespace Service.Service
                     message = $"{updateUserRequest.BirthDay} is too young or too old"
                 };
             }
-            user.Birthday = updateUserRequest.BirthDay;
+                else
+                {
+                    user.Birthday = updateUserRequest.BirthDay;
+                }
+            if(updateUserRequest.Avatar != null)
+            
+
+            if (!FileValidationHelper.IsValidImage(updateUserRequest.Avatar))
+            {
+                return new()
+                {
+                    Success = false,
+                    message = $"Avatar upload is not a image"
+                };
+            }
+            
+            else
+            {
+                var saveimage = await _mediaHelper.SaveMedia(updateUserRequest.Avatar, "User");
+                if (saveimage != null)
+                {
+                    user.Avatar = saveimage.url;
+                }
+            }
+
+            
+            if (!updateUserRequest.FirstName.IsNullOrEmpty())
+            {
             user.Firstname = updateUserRequest.FirstName;
+            }
+            if (!updateUserRequest.LastName.IsNullOrEmpty())
+            {
             user.Lastname = updateUserRequest.LastName;
-            user.Address  = updateUserRequest.Address;
+            }
+            if (!updateUserRequest.Address.IsNullOrEmpty())
+            {
+                user.Address = updateUserRequest.Address;
+            }
+            if(!updateUserRequest.Phonenumber.IsNullOrEmpty())
+            {
             user.PhoneNumber = updateUserRequest.Phonenumber;
+            }
+
+            
 
             await _userManager.UpdateAsync(user);
 
@@ -311,11 +353,7 @@ namespace Service.Service
                 message = "Check your email!"
             };
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="resetPasswordRequest"></param>
-        /// <returns></returns>
+       
         public async Task<ApiResult<bool>> ResetPassword(ResetPasswordRequest resetPasswordRequest)
         {
             var user = await _userManager.FindByEmailAsync(resetPasswordRequest.Email);
@@ -410,7 +448,22 @@ namespace Service.Service
             };
         }
     
-        
+        public async Task<User> UserExits(string Username)
+        {
+            if (Username.IsNullOrEmpty()) 
+            {
+                throw new Exception("Username is not exits");
+            }
+
+            var user = await _userManager.FindByNameAsync(Username);
+            if (user == null)
+            {
+                throw new Exception("Username is not exits");
+            }
+
+            return user;
+
+        }
     }
 }
 

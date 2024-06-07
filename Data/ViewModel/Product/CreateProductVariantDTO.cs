@@ -1,4 +1,4 @@
-﻿namespace Service.ViewModel.System
+﻿namespace Data.ViewModel.Product
 {
 
     public class CreateProductVariantDTOs
