@@ -93,5 +93,6 @@ namespace Service.Service
             return new ApiResult<bool> { Success = true, message = "Box deleted successfully" };
         }
 
+
     }
 }

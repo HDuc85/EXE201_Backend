@@ -137,6 +137,6 @@ app.MapControllers();
 app.UseRouting();
 app.MapDefaultControllerRoute();
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 app.Run();
