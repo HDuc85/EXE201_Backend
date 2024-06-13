@@ -18,5 +18,7 @@ namespace Service.Interface
         Task<ApiResult<bool>> UpdateRole(UpdateRoleRequest updateRoleRequest);
         Task<ApiResult<User>> UpdateUser(UpdateUserRequest updateUserRequest);
         Task<User> UserExits(string Username);
+        Task<ApiResult<bool>> DeleteUser(Guid userId);
+        Task<ApiResult<bool>> BanUser(BanUserRequest banUserRequest);
     }
 }

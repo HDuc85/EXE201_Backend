@@ -228,6 +228,29 @@ namespace Exe201_backend.Controllers
             }
             return Ok(result.message);
         }
-        
+
+        /// <summary>
+        /// Update role with username and List Roles
+        /// </summary>
+        /// <param name="banUserRequest"></param>
+        /// <returns></returns>
+        [HttpPost("BanUser")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> BanUser([FromBody] BanUserRequest banUserRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _userService.BanUser(banUserRequest);
+
+            if (!result.Success)
+            {
+                return BadRequest(result.message);
+            }
+
+            return Ok(result.message);
+        }
     }
 }

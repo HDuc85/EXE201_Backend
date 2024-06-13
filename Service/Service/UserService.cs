@@ -42,7 +42,6 @@ namespace Service.Service
 
         public async Task<ApiResult<User>> CheckLogin(LoginRequest loginRequest)
         {
-            
             var user = await _userManager.FindByNameAsync(loginRequest.Username);
             if (user == null)
             {
@@ -61,7 +60,20 @@ namespace Service.Service
                 return new()
                 {
                     Success = false,
-                    message = "Your account is not actived!"
+                    message = "Your account is not activated!"
+                };
+            }
+
+            // Check if the user is banned
+            var userStatusLog = await _unitOfWork.RepositoryUserStatusLog.GetSingleByCondition(
+                log => log.UserId == user.Id && log.StatusId == 4
+            );
+            if (userStatusLog != null)
+            {
+                return new()
+                {
+                    Success = false,
+                    message = "This account has been banned"
                 };
             }
 
@@ -71,6 +83,7 @@ namespace Service.Service
                 Value = user,
             };
         }
+
 
         public async Task<User> FindByUsername(string username)
         {
@@ -464,8 +477,78 @@ namespace Service.Service
             return user;
 
         }
+
+        public async Task<ApiResult<bool>> DeleteUser(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                return new ApiResult<bool> { Success = false, message = "User not found." };
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return new ApiResult<bool> { Success = false, message = "Failed to delete the user." };
+            }
+
+            // Logging the deletion
+            await _unitOfWork.RepositoryUserStatusLog.Insert(new UserStatusLog
+            {
+                LogAt = DateTime.Now,
+                StatusId = 5, // Assuming 5 indicates a deletion
+                UserId = user.Id,
+                TextLog = $"User {user.UserName} was deleted."
+            });
+            await _unitOfWork.CommitAsync();
+
+            return new ApiResult<bool> { Success = true, message = "User deleted successfully." };
+        }
+
+        public async Task<ApiResult<bool>> BanUser(BanUserRequest banUserRequest)
+        {
+            User user = null;
+
+            if (banUserRequest.UserId.HasValue)
+            {
+                user = await _userManager.FindByIdAsync(banUserRequest.UserId.ToString());
+            }
+            else if (!string.IsNullOrEmpty(banUserRequest.PhoneNumber))
+            {
+                user = await _userManager.Users.FirstOrDefaultAsync(u => u.PhoneNumber == banUserRequest.PhoneNumber);
+            }
+            else if (!string.IsNullOrEmpty(banUserRequest.Email))
+            {
+                user = await _userManager.FindByEmailAsync(banUserRequest.Email);
+            }
+
+            if (user == null)
+            {
+                return new ApiResult<bool> { Success = false, message = "User not found." };
+            }
+            
+
+            // Banning the user
+            user.LockoutEnabled = true;
+            user.LockoutEnd = banUserRequest.BanUntil ?? DateTimeOffset.MaxValue;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return new ApiResult<bool> { Success = false, message = "Failed to ban the user." };
+            }
+
+            // Logging the ban reason and until date separately
+            await _unitOfWork.RepositoryUserStatusLog.Insert(new UserStatusLog
+            {
+                LogAt = DateTime.Now,
+                StatusId = 4, // Assuming 4 indicates a ban
+                UserId = user.Id,
+                TextLog = $"User {user.UserName} was banned. Reason: {banUserRequest.Reason}. Until: {banUserRequest.BanUntil}"
+            });
+            await _unitOfWork.CommitAsync();
+
+            return new ApiResult<bool> { Success = true, message = "User banned successfully." };
+        }
     }
 }
-
-    
-
