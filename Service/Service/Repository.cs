@@ -47,11 +47,13 @@ namespace Service.Service
                 return await _postgresContext.Set<T>().FirstOrDefaultAsync();
             return await _postgresContext.Set<T>().Where(expression).FirstOrDefaultAsync();
         }
+ 
+
 
         public void Delete(T entity)
         {
-            EntityEntry entityEntry = _postgresContext.Entry<T>(entity);
-            entityEntry.State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+            EntityEntry entityEntry = _postgresContext.Entry(entity);
+            entityEntry.State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
         }
 
         public void Delete(Expression<Func<T, bool>> expression)

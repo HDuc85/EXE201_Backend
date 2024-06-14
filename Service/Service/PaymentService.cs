@@ -13,6 +13,7 @@ namespace Service.Service
         private readonly IUserService _userService;
         private readonly IConfiguration _configuration;
 
+
         public PaymentService(IUnitOfWork unitOfWork, IConfiguration configuration, IUserService userService)
         {
             _unitOfWork = unitOfWork;
@@ -20,6 +21,38 @@ namespace Service.Service
             _configuration = configuration;
         }
 
+        public async Task<ApiResult<bool>> UpdatePaymentStatus(int paymentId, int paymentStatus, int StatusOrderId)
+        {
+            var paymentdetail = await _unitOfWork.RepositoryPaymentDetail.GetById(paymentId);
+            if (paymentdetail == null)
+            {
+                return new()
+                {
+                    Success = false,
+                    message = "Payment is not exits"
+                };
+            }
+            var order = await _unitOfWork.RepositoryOrder.GetSingleByCondition(x => x.PaymentId == paymentId);
+            var orderlog =  _unitOfWork.RepositoryOrderStatusLog.Insert(new OrderStatusLog
+            {
+                LogAt = DateTime.Now,
+                OrderId = order.Id,
+                StatusId = StatusOrderId,
+                TextLog = $"Order No.{order.Id} Update Status PaymentStatus at {DateTime.Now}"
+            });
+            paymentdetail.PaymentStatusId = paymentStatus;
+            await _unitOfWork.CommitAsync();
+            return new()
+            {
+                Success = true,
+                message = $"orderId {order.Id} is updated status payment"
+            };
+        }
+
+        public async Task<IEnumerable<PaymentDetail>> GetAll()
+        {
+            return await _unitOfWork.RepositoryPaymentDetail.GetAll();
+        }
         public async Task<ApiResult<string>> MakePayment(PaymentInfoRequest paymentInfoRequest, string username)
         {
             var user = await _userService.FindByUsername(username);
@@ -360,7 +393,7 @@ namespace Service.Service
                 Amount = paymentdetail.Amount,
                 CreateDate = paymentdetail.CreatedDate,
                 Desc = paymentdetail.Description,
-                OrderId = order.Id,
+                OrderId = (int)order.Id,
                 PayDate = paymentdetail.PayDate,
                 
             };

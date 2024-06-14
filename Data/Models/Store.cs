@@ -9,7 +9,8 @@ public partial class Store
 
     public string? StoreName { get; set; }
 
-    public string? Location { get; set; }
+    public string? Address { get; set; }
+    public string? Phone { get; set; }
 
     public int? Avatar { get; set; }
 

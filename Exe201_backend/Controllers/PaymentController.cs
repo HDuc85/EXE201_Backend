@@ -18,12 +18,12 @@ namespace Exe201_backend.Controllers
     {
         private readonly IPaymentService _paymentService;
        
-        private readonly IUnitOfWork _unitOfWork;
+     
         public PaymentController(IPaymentService paymentService, IUnitOfWork unitOfWork)
         {
             _paymentService = paymentService;
            
-            _unitOfWork = unitOfWork;
+       
         }
         /// <summary>
         /// Make payment, return vnpayUrl for payment (Input must have IP client)
@@ -65,7 +65,7 @@ namespace Exe201_backend.Controllers
 
         }
         [HttpPost("ShipCOD")]
-
+        [Authorize]
 
         public async Task<IActionResult> ShipCOD(int OrderId)
         {
@@ -88,7 +88,7 @@ namespace Exe201_backend.Controllers
 
         public async Task<IActionResult> GetAllPaymentDetail()
         {
-            var result = await _unitOfWork.RepositoryPaymentDetail.GetAll();
+            var result = await _paymentService.GetAll();
             if(result == null)
             {
                 return NotFound();
@@ -130,23 +130,14 @@ namespace Exe201_backend.Controllers
 
         public async Task<IActionResult> UpdatePaymentStatus(int paymentId,int paymentStatus,int StatusOrderId)
         {
-            var paymentdetail = await _unitOfWork.RepositoryPaymentDetail.GetById(paymentId);
-            if(paymentdetail == null)
-            {
-                return BadRequest("paymentId is not exist");
-            }
-            var order = _unitOfWork.RepositoryOrder.GetSingleByCondition(x => x.PaymentId == paymentId);
-            var orderlog = _unitOfWork.RepositoryOrderStatusLog.Insert(new OrderStatusLog
-            {
-                LogAt = DateTime.Now,
-                OrderId = order.Id,
-                StatusId = StatusOrderId,
-                TextLog = $"Order No.{order.Id} Update Status PaymentStatus at {DateTime.Now}"
-            });
-            paymentdetail.PaymentStatusId = paymentStatus;
-            await _unitOfWork.CommitAsync();
+           var result = await  _paymentService.UpdatePaymentStatus(paymentId, paymentStatus,StatusOrderId);
 
-            return Ok(paymentdetail);
+            if (!result.Success)
+            {
+                return BadRequest(result.message);
+            }
+
+            return Ok(result.message);
         }
 
     }

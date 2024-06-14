@@ -32,6 +32,11 @@ namespace Service.Interface
         Repository<Brand> RepositoryBrand { get; }
         Repository<PaymentStatus> RepositoryPaymentStatus { get; }
         Repository<PaymentDetail> RepositoryPaymentDetail { get; }
+        Repository<Store> repositoryStore { get; }
+        Repository<StoreItem> repositoryStoreItem { get; }
+        Repository<StoreMember> repositoryStoreMember { get; }
+        Repository<Voucher> repositoryVoucher { get; }
+        Repository<UserBan> RepositoryUserBan { get; }
 
         Task CommitAsync();
     }

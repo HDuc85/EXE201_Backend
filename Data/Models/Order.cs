@@ -6,7 +6,7 @@ namespace Data.Models;
 
 public partial class Order
 {
-    public int Id { get; set; }
+    public int? Id { get; set; }
 
     public Guid? UserId { get; set; }
 
@@ -23,6 +23,6 @@ public partial class Order
     public virtual ICollection<OrderStatusLog> OrderStatusLogs { get; set; } = new List<OrderStatusLog>();
     public virtual Voucher? Voucher { get; set; }
     public virtual PaymentDetail? Payment { get; set; }
-
+    public virtual OrderStatus? OrderStatus { get; set; }
     public virtual User? User { get; set; }
 }

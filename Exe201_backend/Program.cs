@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Identity;
 using Data.ViewModel.Helper;
 using Service.Helper.Email;
 using Service.Helper.Media;
+using Service.Helper.Address;
+using Exe201_backend.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,7 +55,7 @@ builder.Services.AddSwaggerGen(options =>
           }
         });
 
-
+   
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
@@ -105,6 +107,7 @@ builder.Services.AddScoped<ITokenHandler, TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
 builder.Services.AddScoped<IMediaHelper, MediaHelper>();
+builder.Services.AddScoped<IAddressHelper, AddressHelper>();
 
 
 builder.Services.AddScoped<PasswordHasher<User>>();
@@ -128,7 +131,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 
 
@@ -137,5 +139,6 @@ app.UseRouting();
 app.MapDefaultControllerRoute();
 
 app.UseAuthorization();
+app.UseMiddleware<BannedUserMiddleware>();
 
 app.Run();

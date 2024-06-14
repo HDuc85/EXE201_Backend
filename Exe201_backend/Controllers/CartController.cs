@@ -15,13 +15,13 @@ namespace Exe201_backend.Controllers
     [ApiController]
     public class CartController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        
         private readonly ICartService _cartService;
 
-        public CartController(ICartService cartService, IUnitOfWork unitOfWork) {
+        public CartController(ICartService cartService) {
 
             _cartService = cartService;
-            _unitOfWork = unitOfWork;
+            
         }
 
         /// <summary>

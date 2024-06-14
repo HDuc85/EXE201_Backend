@@ -12,4 +12,6 @@ public partial class OrderStatus
     public bool? IsActive { get; set; }
 
     public virtual ICollection<OrderStatusLog> OrderStatusLogs { get; set; } = new List<OrderStatusLog>();
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
 }
