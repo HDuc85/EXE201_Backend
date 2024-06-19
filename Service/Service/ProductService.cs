@@ -16,6 +16,7 @@ using static System.Net.Mime.MediaTypeNames;
 using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
+using Service.Helper.Media;
 
 namespace Service.Service.System.Product
 {

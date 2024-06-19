@@ -624,11 +624,11 @@ namespace Service.Service
             }
         }
 
-        public async Task<(string, List<Cart>)> CheckQuantity(List<Cart> carts)
+        public async Task<(string, IEnumerable<Cart>)> CheckQuantity(IEnumerable<Cart> carts)
         {
             if (carts != null)
             {
-                if (carts.Count > 0)
+                if (carts.Count() > 0)
                 {
                     string message = string.Empty;
                     foreach (var cart in carts)

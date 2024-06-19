@@ -18,6 +18,7 @@ public partial class ProductVariant
     public string? Thumbnail { get; set; }
 
     public double? Price { get; set; }
+    public int? weight { get; set; }
 
     public int Quantity { get; set; }
     public double? Discount { get; set; }

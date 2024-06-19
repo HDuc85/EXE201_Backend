@@ -1,6 +1,7 @@
 ﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Service.Interface;
 using System.Linq.Expressions;
 
@@ -46,19 +47,25 @@ namespace Service.Service
             return await _postgresContext.Set<T>().Where(expression).FirstOrDefaultAsync();
         }
 
+
+
         public void Delete(T entity)
         {
-            EntityEntry entityEntry = _postgresContext.Entry<T>(entity);
-            entityEntry.State = EntityState.Deleted;
+            EntityEntry entityEntry = _postgresContext.Entry(entity);
+            entityEntry.State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
         }
 
         public void Delete(Expression<Func<T, bool>> expression)
         {
             var entities = _postgresContext.Set<T>().Where(expression).ToList();
-            if (entities.Count > 0)
-            {
-                _postgresContext.Set<T>().RemoveRange(entities);
-            }
+            if (entities.Count > 0) _postgresContext.Set<T>().RemoveRange(entities);
+
+
+        }
+        public void Delete(IEnumerable<T> entities)
+        {
+
+            _postgresContext.Set<T>().RemoveRange(entities);
         }
 
         public async Task Insert(T entity)
@@ -76,6 +83,8 @@ namespace Service.Service
             EntityEntry entityEntry = _postgresContext.Entry<T>(entity);
             entityEntry.State = EntityState.Modified;
         }
+
+
 
         public virtual IQueryable<T> Table => _postgresContext.Set<T>();
 

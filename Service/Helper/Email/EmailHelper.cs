@@ -6,7 +6,7 @@ using System.Net.Mail;
 using System.Net.NetworkInformation;
 using System.Text;
 
-namespace Service.Helper
+namespace Service.Helper.Email
 {
     public class EmailHelper : IEmailHelper
     {
@@ -23,7 +23,7 @@ namespace Service.Helper
                 SmtpClient smtpClient = new SmtpClient(_emailConfig.Provider, _emailConfig.Port);
                 smtpClient.Credentials = new NetworkCredential(_emailConfig.Receiver, _emailConfig.Password);
                 smtpClient.EnableSsl = true;
-                smtpClient.UseDefaultCredentials =false;
+                smtpClient.UseDefaultCredentials = false;
 
                 MailMessage mailMessage = new MailMessage();
                 mailMessage.From = new MailAddress(_emailConfig.Receiver);

@@ -17,6 +17,7 @@ using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
 using Data.ViewModel.Voucher;
+using Service.Helper.Media;
 
 namespace Service.Service.System.Voucher
 {

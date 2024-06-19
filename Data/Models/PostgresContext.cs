@@ -28,7 +28,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 
     public virtual DbSet<Brand> Brands { get; set; }
 
-
+    public virtual DbSet<UserBan> UserBans { get; set; }
     public virtual DbSet<Voucher> Vouchers { get; set; }
     public virtual DbSet<Cart> Carts { get; set; }
 
@@ -83,6 +83,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
     public virtual DbSet<Size> Sizes { get; set; }
 
 
+    public virtual DbSet<PaymentStatus> PaymentStatuses { get; set; }
 
     public virtual DbSet<Status> Statuses { get; set; }
 
@@ -236,6 +237,18 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.HasOne(d => d.TagVaule).WithMany(p => p.BoxTags)
                 .HasForeignKey(d => d.TagVauleId)
                 .HasConstraintName("boxTag_tagVauleId_fkey");
+        });
+
+        modelBuilder.Entity<UserBan>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("userBan_pkey");
+
+            entity.ToTable("userBan");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.endDate).HasColumnName("endDate");
+            entity.Property(e => e.UserId).HasColumnName("userId");
+            
         });
 
         modelBuilder.Entity<Brand>(entity =>
@@ -408,15 +421,16 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.Property(e => e.UserId).HasColumnName("userId");
             entity.Property(e => e.VoucherId).HasColumnName("voucherId");
             entity.Property(e => e.ShipPrice).HasColumnName("shipPrice");
+            entity.Property(e => e.StatusId).HasColumnName("statusId");
+            entity.Property(e => e.TrackingNumber).HasColumnName("TrackingNumber");
 
-            entity.HasOne(d => d.Voucher).WithMany(p => p.Orders).HasForeignKey(d => d.Id);
+            entity.HasOne(d => d.Voucher).WithMany(p => p.Orders).HasForeignKey(d => d.VoucherId);
             entity.HasOne(d => d.Payment).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.PaymentId)
-                .HasConstraintName("order_paymentId_fkey");
-
+                .HasForeignKey(d => d.PaymentId);
+           
             entity.HasOne(d => d.User).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("order_userId_fkey");
+                .HasForeignKey(d => d.UserId);
+            entity.HasOne(d => d.OrderStatus).WithMany(p => p.Orders).HasForeignKey(d => d.StatusId); 
         });
 
         modelBuilder.Entity<OrderItem>(entity =>
@@ -425,6 +439,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
                 .HasKey(e  => e.Id)
                 .HasName("orderItem_pkey");
             entity.ToTable("orderItem");
+            entity.Property(e => e.Id).HasColumnName("id");
 
             entity.Property(e => e.BoxId).HasColumnName("boxId");
             entity.Property(e => e.ProductVariantId).HasColumnName("productVariantId");
@@ -433,11 +448,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.Price).HasColumnName("price");
 
-            entity.HasOne(d => d.ProductVariant).WithMany(d => d.OrderItem)
-                .HasForeignKey(d => d.ProductVariantId);
-
-            entity.HasOne(d => d.Order).WithMany(d => d.OrderItems)
-                .HasForeignKey(d => d.OrderId);
+          
                
         });
 
@@ -489,22 +500,16 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.ToTable("paymentDetail");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.AccountNumber)
-                .HasMaxLength(255)
-                .HasColumnName("accountNumber");
             entity.Property(e => e.Amount).HasColumnName("amount");
-            entity.Property(e => e.Description)
-                .HasMaxLength(500)
-                .HasColumnName("description");
-            entity.Property(e => e.PaymentLinkId)
-                .HasMaxLength(255)
-                .HasColumnName("paymentLinkId");
-            entity.Property(e => e.PaymentType)
-                .HasMaxLength(255)
-                .HasColumnName("paymentType");
-            entity.Property(e => e.TransactionDateTime)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("transactionDateTime");
+            entity.Property(e => e.PaymentStatusId).HasColumnName("paymentStatusId");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.CreatedDate).HasColumnName("createdDate");
+            entity.Property(e => e.BankCode).HasColumnName("BankCode");
+            entity.Property(e => e.BankTranNo).HasColumnName("BankTranNo");
+            entity.Property(e => e.PayDate).HasColumnName("PayDate");
+            entity.Property(e => e.TransactionNo).HasColumnName("TransactionNo");
+
+
         });
 
 
@@ -562,6 +567,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
             entity.Property(e => e.ProductId).HasColumnName("productId");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.Discount).HasColumnName("discount");
+            entity.Property(e => e.weight).HasColumnName("weight");
 
             entity.Property(e => e.SizeId).HasColumnName("sizeId");
             entity.Property(e => e.Thumbnail)
@@ -635,8 +641,21 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
                 .HasColumnName("sizeValue");
         });
 
-    
-    
+        modelBuilder.Entity<PaymentStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("paymentStatus_pkey");
+
+            entity.ToTable("paymentStatus");
+
+            entity.HasIndex(e => e.Status, "paymentStatus_status_key").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.Status)
+                .HasMaxLength(255)
+                .HasColumnName("status");
+        });
+
         modelBuilder.Entity<Status>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("status_pkey");
@@ -660,15 +679,16 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Avatar).HasColumnName("avatar");
+            entity.Property(e => e.Phone).HasColumnName("phone");
             entity.Property(e => e.Description)
                 .HasMaxLength(500)
                 .HasColumnName("description");
-            entity.Property(e => e.Location)
+            entity.Property(e => e.Address)
                 .HasColumnType("character varying")
-                .HasColumnName("location");
+                .HasColumnName("address");
             entity.Property(e => e.ProductQuantity).HasColumnName("productQuantity");
             entity.Property(e => e.Rate).HasColumnName("rate");
-            entity.Property(e => e.StatusId).HasColumnName("statusId");
+            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.StoreName)
                 .HasMaxLength(255)
                 .HasColumnName("storeName");
@@ -682,7 +702,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.ProductId).HasColumnName("productVariantId");
             entity.Property(e => e.BoxId).HasColumnName("boxId");
 
             entity.Property(e => e.StoreId).HasColumnName("storeId");

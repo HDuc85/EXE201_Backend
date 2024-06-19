@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 
 namespace Data.Models;
 
 public partial class Order
 {
-    public int Id { get; set; }
+    public int? Id { get; set; }
 
     public Guid? UserId { get; set; }
 
@@ -15,11 +16,13 @@ public partial class Order
 
     public int? VoucherId { get; set; }
     public double? ShipPrice { get; set; }
+    public int? StatusId { get; set; }
+    public string? TrackingNumber {get ;set;}
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual ICollection<OrderStatusLog> OrderStatusLogs { get; set; } = new List<OrderStatusLog>();
     public virtual Voucher? Voucher { get; set; }
     public virtual PaymentDetail? Payment { get; set; }
-
+    public virtual OrderStatus? OrderStatus { get; set; }
     public virtual User? User { get; set; }
 }

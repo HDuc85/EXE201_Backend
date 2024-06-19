@@ -14,6 +14,10 @@ using Service.Repo;
 using Service.Service.System.Product;
 using Service.Service.System.Tag;
 using Service.Service.System.Voucher;
+using Service.Helper.Email;
+using Service.Helper.Media;
+using Service.Helper.Address;
+using Exe201_backend.Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,17 +32,17 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.UseDateOnlyTimeOnlyStringConverters();
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.Http,
-        In = ParameterLocation.Header,
-        BearerFormat = "JWT",
-        Scheme = "Bearer",
-        Description = "Input only token"
-    });
+  options.UseDateOnlyTimeOnlyStringConverters();
+  options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+  {
+    Type = SecuritySchemeType.Http,
+    In = ParameterLocation.Header,
+    BearerFormat = "JWT",
+    Scheme = "Bearer",
+    Description = "Input only token"
+  });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+  options.AddSecurityRequirement(new OpenApiSecurityRequirement()
       {
         {
           new OpenApiSecurityScheme
@@ -56,9 +60,9 @@ builder.Services.AddSwaggerGen(options =>
         });
 
 
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-    //options.OperationFilter<FileUploadOperationFilter>();
+  var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+  options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+  //options.OperationFilter<FileUploadOperationFilter>();
 });
 
 
@@ -68,14 +72,15 @@ builder.Services.AddAuthorization();
 builder.Services.AddDatabase();
 builder.Services.AddFirebaseConfig();
 //Add Identity
-builder.Services.AddIdentity<User, Role>(options => {
-    options.SignIn.RequireConfirmedEmail = true;
+builder.Services.AddIdentity<User, Role>(options =>
+{
+  options.SignIn.RequireConfirmedEmail = true;
 })
              .AddEntityFrameworkStores<PostgresContext>()
              .AddDefaultTokenProviders();
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 {
-    options.TokenLifespan = TimeSpan.FromMinutes(15);
+  options.TokenLifespan = TimeSpan.FromMinutes(15);
 });
 
 
@@ -91,7 +96,7 @@ builder.Services.AddMvc();
 builder.Services.AddControllers()
             .AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+              options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
             });
 
 //Add EmailConfig 
@@ -111,11 +116,17 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISizeService, SizeService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IStoreService, StoreService>();
+
 builder.Services.AddScoped<ITokenHandler, TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
 
 builder.Services.AddScoped<IMediaHelper, MediaHelper>();
+builder.Services.AddScoped<IAddressHelper, AddressHelper>();
 
 builder.Services.AddScoped<IBoxService, BoxService>();
 builder.Services.AddScoped<ITagService, TagService>();
@@ -128,27 +139,21 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-    app.UseDeveloperExceptionPage();
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseDeveloperExceptionPage();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 
 app.UseHttpsRedirection();
-
-
+app.UseAuthentication();
 
 
 app.MapControllers();
 app.UseRouting();
 app.MapDefaultControllerRoute();
 
-
-
-app.UseAuthentication();
 app.UseAuthorization();
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllers();
-});
+app.UseMiddleware<BannedUserMiddleware>();
 
 app.Run();

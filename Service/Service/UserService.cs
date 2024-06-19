@@ -2,15 +2,20 @@
 using Data.ViewModel;
 using Data.ViewModel.Authen;
 using Data.ViewModel.Helper;
+using Data.ViewModel.System;
 using Data.ViewModel.User;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Win32;
-using Service.Helper;
+using Service.Helper.Email;
+using Service.Helper.Media;
 using Service.Interface;
+using System.Collections;
+using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
@@ -65,21 +70,130 @@ namespace Service.Service
                 };
             }
 
+           
+
             return new ApiResult<User>()
             {
                 Success = true,
                 Value = user,
             };
         }
+        
+        public async Task<ApiResult<string>> BanUser(string username, TimeAddInput time)
+        {
+            var user = await UserExits(username);
+            DateTime now = DateTime.Now;
+            if(time.Minutes  > 0)
+            {
+                now = now.AddMinutes((double)time.Minutes);
+            }
+            if (time.Hours > 0)
+            {
+                now = now.AddMinutes((double)time.Hours);
+            }
+            if (time.Days > 0)
+            {
+                now = now.AddMinutes((double)time.Days);
+            }
+            if (time.Months > 0)
+            {
+                now = now.AddMinutes((double)time.Months);
+            }
+            if (time.Years > 0)
+            {
+                now = now.AddMinutes((double)time.Years);
+            }
 
+            await _unitOfWork.RepositoryUserBan.Insert(new UserBan()
+            {
+                endDate = now,
+                UserId = user.Id
+            });
+
+            try
+            {
+
+                await _unitOfWork.CommitAsync();
+                return new ApiResult<string> 
+                { Success = true ,
+                    message = $"{user.UserName} have been ban to {now.ToString("HH:mm - dd/M/yyyy")}"
+                };
+
+            }catch (Exception ex)
+            {
+                return new ApiResult<string>()
+                {
+                    message = ex.Message,
+                    Success = false,
+                };
+            }
+
+        }
+        public async Task<IEnumerable> DeleteUser(Guid id)
+        {
+            var user = await _unitOfWork.RepositoryUser.GetById(id);
+            if (user == null)
+            {
+                return null;
+            }
+           var result =  await _userManager.DeleteAsync(user);
+            if(result.Succeeded)
+            {
+                return "succed";
+            }
+            return null;
+        }
+        public async Task<IEnumerable<User>> GetAll()
+        {
+            return await _unitOfWork.RepositoryUser.GetAll();
+        }
+        public async Task<IEnumerable<User>> Search(string key, int pageIndex, int pageSize)
+        {
+            return await _unitOfWork.RepositoryUser.GetPageSize(x =>
+            x.UserName.Contains(key) ||
+            x.Firstname.Contains(key) ||
+            x.Lastname.Contains(key) ||
+            x.Email.Contains(key) ||
+            x.Address.Contains(key),
+            pageIndex: pageIndex,
+            pageSize: pageSize);
+        }
+        public async Task<IEnumerable<User>> GetPageSize(int pageIndex, int pageSize)
+        {
+            return await _unitOfWork.RepositoryUser.GetPageSize(pageIndex: pageIndex, pageSize: pageSize); 
+        }
         public async Task<User> FindByUsername(string username)
         {
-            return await _unitOfWork.RepositoryUser.GetSingleByCondition(u => u.UserName == username);
+            return await _userManager.FindByNameAsync(username);
+        }
+        public async Task<User> FindByEmail(string Email)
+        {
+            return await _userManager.FindByEmailAsync(Email);
         }
 
+        public async Task RemoveRole(Guid id, string[] roles)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            await _userManager.RemoveFromRolesAsync(user, roles);
+        }
+        public async Task<bool> CheckUserBan(Guid userId)
+        {
+            var luserban = await _unitOfWork.RepositoryUserBan.GetAll(x => x.UserId == userId);
+            var userban = luserban.LastOrDefault();
+
+            if (userban == null)
+            {
+                return false;
+            }
+            if(userban.endDate >  DateTime.Now)
+            {
+                return true;
+            }
+            return false;
+        }
         public async Task<User> FindById(Guid userId)
         {
-            return await _unitOfWork.RepositoryUser.GetSingleByCondition(u => u.Id == userId);
+            return await _userManager.FindByIdAsync(userId.ToString());
 
         }
 
