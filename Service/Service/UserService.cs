@@ -47,7 +47,6 @@ namespace Service.Service
 
         public async Task<ApiResult<User>> CheckLogin(LoginRequest loginRequest)
         {
-            
             var user = await _userManager.FindByNameAsync(loginRequest.Username);
             if (user == null)
             {
@@ -66,11 +65,10 @@ namespace Service.Service
                 return new()
                 {
                     Success = false,
-                    message = "Your account is not actived!"
+                    message = "Your account is not activated!"
                 };
             }
 
-           
 
             return new ApiResult<User>()
             {
@@ -78,12 +76,12 @@ namespace Service.Service
                 Value = user,
             };
         }
-        
+
         public async Task<ApiResult<string>> BanUser(string username, TimeAddInput time)
         {
             var user = await UserExits(username);
             DateTime now = DateTime.Now;
-            if(time.Minutes  > 0)
+            if (time.Minutes > 0)
             {
                 now = now.AddMinutes((double)time.Minutes);
             }
@@ -114,12 +112,14 @@ namespace Service.Service
             {
 
                 await _unitOfWork.CommitAsync();
-                return new ApiResult<string> 
-                { Success = true ,
+                return new ApiResult<string>
+                {
+                    Success = true,
                     message = $"{user.UserName} have been ban to {now.ToString("HH:mm - dd/M/yyyy")}"
                 };
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return new ApiResult<string>()
                 {
@@ -129,20 +129,7 @@ namespace Service.Service
             }
 
         }
-        public async Task<IEnumerable> DeleteUser(Guid id)
-        {
-            var user = await _unitOfWork.RepositoryUser.GetById(id);
-            if (user == null)
-            {
-                return null;
-            }
-           var result =  await _userManager.DeleteAsync(user);
-            if(result.Succeeded)
-            {
-                return "succed";
-            }
-            return null;
-        }
+    
         public async Task<IEnumerable<User>> GetAll()
         {
             return await _unitOfWork.RepositoryUser.GetAll();
@@ -160,8 +147,9 @@ namespace Service.Service
         }
         public async Task<IEnumerable<User>> GetPageSize(int pageIndex, int pageSize)
         {
-            return await _unitOfWork.RepositoryUser.GetPageSize(pageIndex: pageIndex, pageSize: pageSize); 
+            return await _unitOfWork.RepositoryUser.GetPageSize(pageIndex: pageIndex, pageSize: pageSize);
         }
+
         public async Task<User> FindByUsername(string username)
         {
             return await _userManager.FindByNameAsync(username);
@@ -185,7 +173,7 @@ namespace Service.Service
             {
                 return false;
             }
-            if(userban.endDate >  DateTime.Now)
+            if (userban.endDate > DateTime.Now)
             {
                 return true;
             }
@@ -225,11 +213,11 @@ namespace Service.Service
             DateOnly maxDate = today.AddYears(-18);
             if (!(registerRequest.Birthday <= maxDate) || !(registerRequest.Birthday >= minDate))
             {
-                return new (new()
+                return new(new()
                 {
                     Success = false,
                     message = $"{registerRequest.Birthday} is too young or too old"
-                },"");
+                }, "");
             }
 
             var newUser = new User()
@@ -252,19 +240,19 @@ namespace Service.Service
                 { Success = false, message = "Something fail when Created" }, "");
 
             }
-            
+
 
             string tokenComfirmEmail = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
             string encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(tokenComfirmEmail));
 
             await _userManager.AddToRoleAsync(newUser, "customer");
-       
-             await _unitOfWork.RepositoryUserStatusLog.Insert(new UserStatusLog
+
+            await _unitOfWork.RepositoryUserStatusLog.Insert(new UserStatusLog
             {
-                 LogAt = DateTime.Now,
-                 StatusId = 2,
-                 UserId = newUser.Id,
-                 TextLog = newUser.UserName + " Create at " + DateTime.Now.ToString(),
+                LogAt = DateTime.Now,
+                StatusId = 2,
+                UserId = newUser.Id,
+                TextLog = newUser.UserName + " Create at " + DateTime.Now.ToString(),
             });
             await _unitOfWork.CommitAsync();
             return new(new ApiResult<User>
@@ -273,8 +261,8 @@ namespace Service.Service
 
         public async Task<ApiResult<User>> UpdateUser(UpdateUserRequest updateUserRequest)
         {
-            var user =  await _userManager.FindByNameAsync(updateUserRequest.Username.ToString());
-            if(user == null)
+            var user = await _userManager.FindByNameAsync(updateUserRequest.Username.ToString());
+            if (user == null)
             {
                 return new()
                 {
@@ -284,61 +272,61 @@ namespace Service.Service
             }
 
             DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-            DateOnly minDate = today.AddYears(-60); 
+            DateOnly minDate = today.AddYears(-60);
             DateOnly maxDate = today.AddYears(-18);
             if (updateUserRequest.BirthDay.HasValue)
-            if (!(updateUserRequest.BirthDay <= maxDate) || !(updateUserRequest.BirthDay >= minDate))
-            {
-                return new()
+                if (!(updateUserRequest.BirthDay <= maxDate) || !(updateUserRequest.BirthDay >= minDate))
                 {
-                    Success = false,
-                    message = $"{updateUserRequest.BirthDay} is too young or too old"
-                };
-            }
+                    return new()
+                    {
+                        Success = false,
+                        message = $"{updateUserRequest.BirthDay} is too young or too old"
+                    };
+                }
                 else
                 {
                     user.Birthday = updateUserRequest.BirthDay;
                 }
-            if(updateUserRequest.Avatar != null)
-            
+            if (updateUserRequest.Avatar != null)
 
-            if (!FileValidationHelper.IsValidImage(updateUserRequest.Avatar))
-            {
-                return new()
+
+                if (!FileValidationHelper.IsValidImage(updateUserRequest.Avatar))
                 {
-                    Success = false,
-                    message = $"Avatar upload is not a image"
-                };
-            }
-            
-            else
-            {
-                var saveimage = await _mediaHelper.SaveMedia(updateUserRequest.Avatar, "User");
-                if (saveimage != null)
-                {
-                    user.Avatar = saveimage.url;
+                    return new()
+                    {
+                        Success = false,
+                        message = $"Avatar upload is not a image"
+                    };
                 }
-            }
 
-            
+                else
+                {
+                    var saveimage = await _mediaHelper.SaveMedia(updateUserRequest.Avatar, "User");
+                    if (saveimage != null)
+                    {
+                        user.Avatar = saveimage.url;
+                    }
+                }
+
+
             if (!updateUserRequest.FirstName.IsNullOrEmpty())
             {
-            user.Firstname = updateUserRequest.FirstName;
+                user.Firstname = updateUserRequest.FirstName;
             }
             if (!updateUserRequest.LastName.IsNullOrEmpty())
             {
-            user.Lastname = updateUserRequest.LastName;
+                user.Lastname = updateUserRequest.LastName;
             }
             if (!updateUserRequest.Address.IsNullOrEmpty())
             {
                 user.Address = updateUserRequest.Address;
             }
-            if(!updateUserRequest.Phonenumber.IsNullOrEmpty())
+            if (!updateUserRequest.Phonenumber.IsNullOrEmpty())
             {
-            user.PhoneNumber = updateUserRequest.Phonenumber;
+                user.PhoneNumber = updateUserRequest.Phonenumber;
             }
 
-            
+
 
             await _userManager.UpdateAsync(user);
 
@@ -467,7 +455,7 @@ namespace Service.Service
                 message = "Check your email!"
             };
         }
-       
+
         public async Task<ApiResult<bool>> ResetPassword(ResetPasswordRequest resetPasswordRequest)
         {
             var user = await _userManager.FindByEmailAsync(resetPasswordRequest.Email);
@@ -520,17 +508,17 @@ namespace Service.Service
                     message = "User is not exist!"
                 };
             }
-           
-            
+
+
             var roles = await _roleManager.Roles.ToListAsync();
             var userRoles = await _userManager.GetRolesAsync(user);
             var roleRemove = new List<string>();
             var roleAdd = new List<string>();
-            
+
 
             foreach (var role in roles)
             {
-                
+
                 if (userRoles.Any(x => x == role.Name))
                 {
                     if (!updateRoleRequest.roles.Any(x => x == role.Name))
@@ -541,7 +529,7 @@ namespace Service.Service
                 }
                 else
                 {
-                    if(updateRoleRequest.roles.Any(x => x == role.Name))
+                    if (updateRoleRequest.roles.Any(x => x == role.Name))
                     {
                         roleAdd.Add(role.Name);
                     }
@@ -549,7 +537,7 @@ namespace Service.Service
             }
 
 
-            await _userManager.RemoveFromRolesAsync(user,roleRemove);
+            await _userManager.RemoveFromRolesAsync(user, roleRemove);
             await _userManager.AddToRolesAsync(user, roleAdd);
 
             userRoles = await _userManager.GetRolesAsync(user);
@@ -561,10 +549,10 @@ namespace Service.Service
                 message = $"{user.UserName} add role : {string.Join(", ", userRoles.ToArray())} successful"
             };
         }
-    
+
         public async Task<User> UserExits(string Username)
         {
-            if (Username.IsNullOrEmpty()) 
+            if (Username.IsNullOrEmpty())
             {
                 throw new Exception("Username is not exits");
             }
@@ -578,8 +566,34 @@ namespace Service.Service
             return user;
 
         }
+
+        public async Task<ApiResult<bool>> DeleteUser(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                return new ApiResult<bool> { Success = false, message = "User not found." };
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return new ApiResult<bool> { Success = false, message = "Failed to delete the user." };
+            }
+
+            // Logging the deletion
+            await _unitOfWork.RepositoryUserStatusLog.Insert(new UserStatusLog
+            {
+                LogAt = DateTime.Now,
+                StatusId = 5, // Assuming 5 indicates a deletion
+                UserId = user.Id,
+                TextLog = $"User {user.UserName} was deleted."
+            });
+            await _unitOfWork.CommitAsync();
+
+            return new ApiResult<bool> { Success = true, message = "User deleted successfully." };
+        }
+
+        
     }
 }
-
-    
-

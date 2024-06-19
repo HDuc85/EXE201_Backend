@@ -13,7 +13,7 @@ namespace Service.Interface
         Task<ApiResult<User>> CheckLogin(LoginRequest loginRequest);
         Task<bool> CheckUserBan(Guid userId);
         Task<ApiResult<bool>> ComfirmEmail(string userId, string tokenConfirm);
-        Task<IEnumerable> DeleteUser(Guid id);
+       
         Task<User> FindByEmail(string Email);
         Task<User> FindById(Guid userId);
         Task<User> FindByUsername(string username);
@@ -28,5 +28,7 @@ namespace Service.Interface
         Task<ApiResult<bool>> UpdateRole(UpdateRoleRequest updateRoleRequest);
         Task<ApiResult<User>> UpdateUser(UpdateUserRequest updateUserRequest);
         Task<User> UserExits(string Username);
+        Task<ApiResult<bool>> DeleteUser(Guid userId);
+       
     }
 }

@@ -4,7 +4,6 @@
     {
         public T? Value { get; set; }
         public bool Success { get; set; }
- 
         public string message { get; set; }
     }
     public class ApiResult
