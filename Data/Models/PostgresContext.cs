@@ -688,7 +688,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
                 .HasColumnName("address");
             entity.Property(e => e.ProductQuantity).HasColumnName("productQuantity");
             entity.Property(e => e.Rate).HasColumnName("rate");
-            entity.Property(e => e.StatusId).HasColumnName("statusId");
+            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.StoreName)
                 .HasMaxLength(255)
                 .HasColumnName("storeName");
@@ -702,7 +702,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.ProductId).HasColumnName("productVariantId");
             entity.Property(e => e.BoxId).HasColumnName("boxId");
 
             entity.Property(e => e.StoreId).HasColumnName("storeId");

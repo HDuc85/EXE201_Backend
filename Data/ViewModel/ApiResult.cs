@@ -7,4 +7,10 @@
  
         public string message { get; set; }
     }
+    public class ApiResult
+    {
+        public bool Success { get; set; }
+
+        public string message { get; set; }
+    }
 }

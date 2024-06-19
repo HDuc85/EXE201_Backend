@@ -360,7 +360,50 @@ namespace Service.Service
         {
             var user = await _userService.UserExits(username);
 
-             _unitOfWork.RepositoryOrder.Delete(x => (x.UserId ==  user.Id) && (x.Id ==  orderId));
+            var order = await _unitOfWork.RepositoryOrder.GetById(orderId);
+
+            if(order == null)
+            {
+                throw new Exception("Order Id is invalid");
+            }
+
+            if(order.TrackingNumber != null)
+            {
+
+
+            var payload = new
+            {
+                TYPE = 4,
+                ORDER_NUMBER = order.TrackingNumber,
+                NOTE = $"Cancel order number {order.Id}"
+            };
+
+            var jsonPayload = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            var token = await _tokenHandler.GetTokenVTPAsync();
+            string getpriceUrl = _configuration["VTP:CancelOrderUrl"];
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("token", token);
+
+                var response = await client.PostAsync(getpriceUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Request failed with status code: {response.StatusCode}");
+                }
+               
+            }
+
+            }
+            _unitOfWork.RepositoryOrderItem.Delete(x => x.OrderId == orderId);
+           
+
+            order.StatusId = 7;
+            _unitOfWork.RepositoryOrder.Update(order);
+
+
 
             try
             {
@@ -394,12 +437,12 @@ namespace Service.Service
                                 x.Phone == makeOrder.SenderPhone);
             var senderAddress = await _addressHelper.AddressFormater(makeOrder.SenderAddress);
             var receiverAddress = await _addressHelper.AddressFormater(makeOrder.ReceiverAddress);
-            int payment = 0;
+            
             string paymentUrl = string.Empty;
             var listItem = new List<LIST_ITEM_PAYLOAD>();
             var listCart = await _unitOfWork.RepositoryCart.GetAll(x => x.UserId == user.Id);
             List<OrderItem> ListorderItems = new List<OrderItem>();
-
+            List<Cart> listCartorder = new List<Cart>();
             Order newOrder = new Order()
             {
                 UserId = user.Id,
@@ -448,7 +491,7 @@ namespace Service.Service
                             PRODUCT_PRICE = (double)Productitem.Price,
                             PRODUCT_QUANTITY = item.Quantity
                         });
-                        _unitOfWork.RepositoryCart.Delete(product);
+                        listCartorder.Add(product);
                     }
                 }
                 if (item.Type == 2)
@@ -473,12 +516,12 @@ namespace Service.Service
                             PRODUCT_PRICE = (double)box.Price,
                             PRODUCT_QUANTITY = item.Quantity
                         });
-                        _unitOfWork.RepositoryCart.Delete(boxcart);
+                        listCartorder.Add(boxcart);
                     }
                 }
 
             }
-
+            await _unitOfWork.RepositoryOrderItem.Insert(ListorderItems);
             await _unitOfWork.RepositoryOrderStatusLog.Insert(new OrderStatusLog
             {
                 LogAt = DateTime.Now,
@@ -487,34 +530,8 @@ namespace Service.Service
                 TextLog = $"Order No.{newOrder.Id} Create at {DateTime.Now}"
             });
 
-            await _unitOfWork.CommitAsync();
-            if(makeOrder.PaymentType == 2)
-            {
-                var shipcodresult = await _paymentService.ShipCOD(username, (int)newOrder.Id);
-                if(shipcodresult.Success)
-                {
-                    payment = 2;
-                    newOrder.StatusId = 5;
-                   
-                }
-                else
-                {
-                    throw new Exception(shipcodresult.message);
-                }
-            }
-            if(makeOrder.PaymentType == 1)
-            {
-                var paymentOrder = await _paymentService.MakePayment(new PaymentInfoRequest { OrderId = (int)newOrder.Id , ip = makeOrder.UserIP}, username);
-                if(paymentOrder.Success)
-                {
-                    payment = 1;
-                    paymentUrl = paymentOrder.Value;
-                    newOrder.StatusId = 2;
-                }
-                else { 
-                    throw new Exception(paymentOrder.message);
-                }
-            }
+           
+            
             
 
             var payload = new
@@ -529,7 +546,7 @@ namespace Service.Service
                 PRODUCT_TYPE = "HH",
                 PRODUCT_WEIGHT = makeOrder.Weight,
                 MONEY_COLLECTION = makeOrder.totalPrice,
-                ORDER_PAYMENT = payment,
+                ORDER_PAYMENT = makeOrder.PaymentType,
                 ORDER_SERVICE = makeOrder.OrderService,
                 ORDER_NOTE = makeOrder.OrderNote,
                 LIST_ITEM = listItem
@@ -554,7 +571,10 @@ namespace Service.Service
                 var responseString = await response.Content.ReadAsStringAsync();
                 JObject jsonResponse = JObject.Parse(responseString);
                 var result = jsonResponse["data"]["ORDER_NUMBER"].ToString();
+                var feeship = int.Parse(jsonResponse["data"]["MONEY_TOTAL_FEE"].ToString()) + int.Parse(jsonResponse["data"]["MONEY_VAT"].ToString());
+
                 newOrder.TrackingNumber = result;
+                newOrder.ShipPrice = feeship;
                 await _unitOfWork.RepositoryOrderStatusLog.Insert(new OrderStatusLog
                 {
                     LogAt = DateTime.Now,
@@ -563,6 +583,40 @@ namespace Service.Service
                     TextLog = $"Order No.{newOrder.Id} Update at {DateTime.Now}"
                 });
 
+                await _unitOfWork.CommitAsync();
+
+                if (makeOrder.PaymentType == 2)
+                {
+                    var shipcodresult = await _paymentService.ShipCOD(username, (int)newOrder.Id);
+                    if (shipcodresult.Success)
+                    {
+               
+                        newOrder.StatusId = 5;
+
+                    }
+                    else
+                    {
+                        throw new Exception(shipcodresult.message);
+                    }
+                }
+                if (makeOrder.PaymentType == 1)
+                {
+                    var paymentOrder = await _paymentService.MakePayment(new PaymentInfoRequest { OrderId = (int)newOrder.Id, ip = makeOrder.UserIP }, username);
+                    if (paymentOrder.Success)
+                    {
+                     
+                        paymentUrl = paymentOrder.Value;
+                        newOrder.StatusId = 2;
+                    }
+                    else
+                    {
+                        throw new Exception(paymentOrder.message);
+                    }
+                }
+
+
+
+                _unitOfWork.RepositoryCart.Delete(listCartorder);
                 await  _unitOfWork.CommitAsync();
                 return new()
                 {
@@ -576,6 +630,7 @@ namespace Service.Service
             }
 
         }
+        
         public double PriceDiscount(double price, double discount)
         {
             return price;

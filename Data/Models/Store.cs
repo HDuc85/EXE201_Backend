@@ -12,7 +12,7 @@ public partial class Store
     public string? Address { get; set; }
     public string? Phone { get; set; }
 
-    public int? Avatar { get; set; }
+    public string? Avatar { get; set; }
 
     public double? Rate { get; set; }
 
@@ -20,7 +20,7 @@ public partial class Store
 
     public int? ProductQuantity { get; set; }
 
-    public int? StatusId { get; set; }
+    public string? Status { get; set; }
 
     public virtual ICollection<StoreItem> StoreItems { get; set; } = new List<StoreItem>();
 

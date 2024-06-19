@@ -1,6 +1,7 @@
 ﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Service.Interface;
 using System.Linq.Expressions;
 using System.Reflection.Metadata.Ecma335;
@@ -62,6 +63,11 @@ namespace Service.Service
            if( entities.Count > 0 ) _postgresContext.Set<T>().RemoveRange(entities);
            
 
+        }
+        public void Delete(IEnumerable<T> entities)
+        {
+           
+            _postgresContext.Set<T>().RemoveRange(entities);
         }
 
         public async Task Insert(T entity)

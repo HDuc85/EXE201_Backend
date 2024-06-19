@@ -7,6 +7,7 @@ namespace Service.Interface
         Task Commit();
         void Delete(Expression<Func<T, bool>> expression);
         void Delete(T entity);
+        void Delete(IEnumerable<T> entities);
         Task<IEnumerable<T>> GetAll(Expression<Func<T, bool>> expression = null);
         Task<T> GetById(object id);
         Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null, int pageIndex = 1, int pageSize = 5);

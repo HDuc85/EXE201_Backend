@@ -166,7 +166,16 @@ namespace Service.Service
         {
             return await _userManager.FindByNameAsync(username);
         }
-        
+        public async Task<User> FindByEmail(string Email)
+        {
+            return await _userManager.FindByEmailAsync(Email);
+        }
+
+        public async Task RemoveRole(Guid id, string[] roles)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            await _userManager.RemoveFromRolesAsync(user, roles);
+        }
         public async Task<bool> CheckUserBan(Guid userId)
         {
             var luserban = await _unitOfWork.RepositoryUserBan.GetAll(x => x.UserId == userId);

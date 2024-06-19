@@ -210,12 +210,12 @@ namespace Service.Service
             {
                 Paymentdetail.PaymentStatusId = 3;
             }
-
+            order.StatusId = 5;
             var orderlog = _unitOfWork.RepositoryOrderStatusLog.Insert(new OrderStatusLog
             {
                 LogAt = DateTime.Now,
                 OrderId = order.Id,
-                StatusId = 2,
+                StatusId = 5,
                 TextLog = $"Order No.{order.Id} make COD payment at {DateTime.Now}"
             });
             await _unitOfWork.CommitAsync();
@@ -292,6 +292,7 @@ namespace Service.Service
                 update.Amount = paymentDetail.Amount;
                 update.TransactionNo = paymentDetail.TransactionNo;
                 update.BankCode = paymentDetail.BankCode;
+                order.StatusId = 4;
                 _unitOfWork.RepositoryPaymentDetail.Update(update);
                 try
                 {
@@ -316,6 +317,7 @@ namespace Service.Service
                 update.PaymentStatusId = 1;
                 try
                 {
+                    order.StatusId = 3;
                     var orderlog = _unitOfWork.RepositoryOrderStatusLog.Insert(new OrderStatusLog
                     {
                         LogAt = DateTime.Now,
