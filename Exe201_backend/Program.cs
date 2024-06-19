@@ -127,12 +127,11 @@ builder.Services.AddScoped<IValidator<LoginRequest>, LoginValidator>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+
 
 app.UseHttpsRedirection();
 
@@ -142,16 +141,14 @@ app.UseHttpsRedirection();
 app.MapControllers();
 app.UseRouting();
 app.MapDefaultControllerRoute();
-<<<<<<< Updated upstream
 
-app.UseAuthentication();
-app.UseAuthorization();
-=======
+
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
 });
->>>>>>> Stashed changes
+
 app.Run();
