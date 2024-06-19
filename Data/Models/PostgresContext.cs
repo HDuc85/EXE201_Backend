@@ -261,7 +261,7 @@ public partial class PostgresContext : IdentityDbContext<User, Role, Guid>
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Type).HasColumnName("type");
-            entity.Property(e => e.VoucherName).HasColumnName("voucherName");
+            entity.Property(e => e.VoucherName).HasColumnName("vouchername");
             entity.Property(e => e.Value).HasColumnName("value");
             entity.Property(e => e.DateStart).HasColumnName("dateStart");
             entity.Property(e => e.DateEnd).HasColumnName("dateEnd");

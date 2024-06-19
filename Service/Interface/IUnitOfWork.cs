@@ -28,6 +28,6 @@ public interface IUnitOfWork : IDisposable
     Repository<Size> RepositorySize { get; }
     Repository<Color> RepositoryColor { get; }
     Repository<Brand> RepositoryBrand { get; }
-
+    Repository<Voucher> RepositoryVoucher { get; }
     Task CommitAsync();
 }

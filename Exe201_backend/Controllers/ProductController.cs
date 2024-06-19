@@ -25,7 +25,13 @@ namespace Exe201_backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            var products = await _productService.GetProducts();
+            if (products == null)
+            {
+                return NotFound();
+            }
+            return Ok(products);
+
         }
         // GET: api/Products{id}
         [HttpGet("{id}")]
@@ -42,27 +48,10 @@ namespace Exe201_backend.Controllers
         }
         [HttpPost]
         [Authorize(Roles = "admin")]
-        public async Task<ActionResult<Product>> CreateProduct([FromForm] CreateProductDTO createProductDto)
+        public async Task<ActionResult<ProductDTO>> CreateProduct(CreateProductDTO createProductDto)
         {
-            var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            var id = GetUserIdFromToken(token);
             var product = await _productService.CreateProduct(createProductDto);
-            if (id == Guid.Empty)
-            {
-                return Unauthorized();
-            }
-
-            product.Auther = id;
             return Ok(product);
-        }
-        private Guid GetUserIdFromToken(string token)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(token);
-
-            // Assuming the user's ID is stored in the "sub" claim
-            var userIdClaim = jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier);
-            return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId) ? userId : Guid.Empty;
         }
         [HttpPut("UpdateProduct")]
         [Authorize(Roles = "admin")]
@@ -71,13 +60,27 @@ namespace Exe201_backend.Controllers
             var product = await _productService.UpdateProduct(productId, updateProductDto);
             return Ok(product);
         }
-        [HttpDelete("DeleteProduct")]
-        public async Task<ActionResult<Product>> DeleteProduct(int productId)
+        [HttpDelete("DeleteProduct/{productId}")]
+        public async Task<ActionResult> DeleteProduct(int productId)
         {
-            var product = await _productService.DeleteProduct(productId);
-            return Ok(product);
+            var result = await _productService.DeleteProduct(productId);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
         }
+        [HttpGet("SearchProductsbyName{productname}")]
+        public async Task<ActionResult<Product>> SearchProductsbyName(string productname) 
+        {
+            var products = await _productService.SearchProductsByName(productname);
 
+            if (products == null || !products.Any())
+            {
+                return NotFound("No products found with the specified name.");
+            }
+
+            return Ok(products);
+
+        }
 
     }
 }

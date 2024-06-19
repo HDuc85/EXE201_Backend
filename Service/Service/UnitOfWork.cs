@@ -33,7 +33,7 @@ namespace Service.Service
         Repository<BoxMedia> _repositoryBoxMedia;
         Repository<ProductMedia> _repositoryProductMedia;
         Repository<FeedbackMedia> _repositoryFeedbackMedia;
-
+        Repository<Voucher> _repositoryVoucher;
 
 
 
@@ -72,10 +72,11 @@ namespace Service.Service
 
         public Repository<ProductVariant> RepositoryVariant { get { return _repositoryProductVariant ??= new Repository<ProductVariant>(_postgresContext); } }
 
-    
+        public Repository<Voucher> RepositoryVoucher { get { return _repositoryVoucher ??= new Repository<Voucher>(_postgresContext); } }
 
 
-public async Task CommitAsync()
+
+        public async Task CommitAsync()
         {
             await _postgresContext.SaveChangesAsync();
         }

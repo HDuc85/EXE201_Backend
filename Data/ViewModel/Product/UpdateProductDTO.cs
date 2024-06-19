@@ -9,5 +9,7 @@
         public string? Description { get; set; }
         //public Guid? Auther { get; set; }
         public List<CreateProductVariantDTO> ProductVariants { get; set; }
+        public List<string>? MediaUrls { get; set; }
+        public List<string?> TagValues { get; set; }
     }
 }

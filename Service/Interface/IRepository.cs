@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Data.Models;
+using System.Linq.Expressions;
 
 namespace Service.Interface
 {
@@ -15,5 +16,8 @@ namespace Service.Interface
         Task Insert(T entity);
         void Update(T entity);
         void RemoveRange(IEnumerable<T> entities);
+        Task<IEnumerable<T>> GetListByCondition(Expression<Func<T, bool>> expression = null);
+        Task<IEnumerable<Product>> GetAllWithVariants();
+        IQueryable<Product> GetListProductbyId(Expression<Func<Product, bool>> predicate);
     }
 }

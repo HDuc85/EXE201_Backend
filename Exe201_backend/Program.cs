@@ -12,6 +12,8 @@ using Data.ViewModel.Helper;
 using Service.Helper;
 using Service.Repo;
 using Service.Service.System.Product;
+using Service.Service.System.Tag;
+using Service.Service.System.Voucher;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,6 +58,7 @@ builder.Services.AddSwaggerGen(options =>
 
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    //options.OperationFilter<FileUploadOperationFilter>();
 });
 
 
@@ -63,7 +66,7 @@ builder.Services.AddAuthorization();
 
 // Add database 
 builder.Services.AddDatabase();
-
+builder.Services.AddFirebaseConfig();
 //Add Identity
 builder.Services.AddIdentity<User, Role>(options => {
     options.SignIn.RequireConfirmedEmail = true;
@@ -98,14 +101,16 @@ builder.Services.AddScoped<IRepository<Size>, Repository<Size>>();
 builder.Services.AddScoped<IRepository<Brand>, Repository<Brand>>();
 builder.Services.AddScoped<IRepository<Color>, Repository<Color>>();
 builder.Services.AddScoped<IRepository<ProductVariant>, Repository<ProductVariant>>();
+
 //Add Service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-//builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
+//builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<UnitOfWork>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISizeService, SizeService>();
+builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddScoped<ITokenHandler, TokenHandler>();
 builder.Services.AddScoped<IEmailHelper, EmailHelper>();
 builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
@@ -113,7 +118,7 @@ builder.Services.AddScoped<IEmailTemplateReader, EmailTemplateReader>();
 builder.Services.AddScoped<IMediaHelper, MediaHelper>();
 
 builder.Services.AddScoped<IBoxService, BoxService>();
-
+builder.Services.AddScoped<ITagService, TagService>();
 
 builder.Services.AddScoped<PasswordHasher<User>>();
 //Add validator
@@ -124,6 +129,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -136,7 +142,16 @@ app.UseHttpsRedirection();
 app.MapControllers();
 app.UseRouting();
 app.MapDefaultControllerRoute();
+<<<<<<< Updated upstream
 
 app.UseAuthentication();
 app.UseAuthorization();
+=======
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
+>>>>>>> Stashed changes
 app.Run();

@@ -11,40 +11,50 @@ using Data.Models;
 using Service.Interface;
 using Service.Repo;
 using Data.ViewModel.Product;
+using Data.ViewModel;
+using static System.Net.Mime.MediaTypeNames;
+using Data.ViewModel.User;
+using Firebase.Auth;
+using Service.Helper;
 
 namespace Service.Service.System.Product
 {
     public class ProductService : IProductService
     {
         private readonly UnitOfWork _unitOfWork;
-        public ProductService(UnitOfWork unitOfWork)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMediaHelper _mediaHelper;
+
+        public ProductService(UnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IMediaHelper mediaHelper)
         {
 
             _unitOfWork = unitOfWork;
+            _httpContextAccessor = httpContextAccessor;
+            _mediaHelper = mediaHelper;
         }
 
 
-        Task<ActionResult<IEnumerable<Data.Models.Product>>> IProductService.GetProducts()
-        {
-            throw new NotImplementedException();
-        }
 
-        public async Task<Data.Models.Product> CreateProduct(CreateProductDTO createProductDto)
+        public async Task<ProductDTO> CreateProduct(CreateProductDTO createProductDto)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var product = new Data.Models.Product
             {
                 ProductName = createProductDto.ProductName,
                 QuantitySold = createProductDto.QuantitySold,
                 //Rate = createProductDto.Rate,
                 Description = createProductDto.Description,
-                ProductVariants = new List<ProductVariant>()
+                Auther = Guid.Parse(userId),
+                ProductVariants = new List<ProductVariant>(),
+                ProductMedia = new List<ProductMedia>(),
+                ProductTags = new List<ProductTag>(),
             };
             foreach (var variantDto in createProductDto.ProductVariants)
             {
                 var size = await GetOrCreateSizeAsync(variantDto.SizeName);
                 var brand = await GetOrCreateBrandAsync(variantDto.BrandName);
                 var color = await GetOrCreateColorAsync(variantDto.ColorName);
-
+                var saveimage = await _mediaHelper.SaveMediaBase64(variantDto.Thumbnail, "ProductVariant");
                 var productVariant = new ProductVariant
                 {
                     SizeId = size?.Id,
@@ -52,28 +62,71 @@ namespace Service.Service.System.Product
                     ColorId = color?.Id,
                     Price = variantDto.Price,
                     Quantity = variantDto.Quantity,
+                    Thumbnail = saveimage.url,
                     IsActive = true,
                 };
-                if (variantDto.Thumbnail != null)
-                {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        await variantDto?.Thumbnail.CopyToAsync(memoryStream);
-                        productVariant.Thumbnail = Convert.ToBase64String(memoryStream.ToArray());
-                    }
-                }
-                else
-                {
-                    productVariant.Thumbnail = null; // Set to null if thumbnail is null
-                }
 
                 product.ProductVariants.Add(productVariant);
             }
-
             _unitOfWork.RepositoryProduct.Insert(product);
             await _unitOfWork.CommitAsync();
+            if (createProductDto.MediaUrls != null && createProductDto.MediaUrls.Any())
+            {
+                foreach (var mediaUrl in createProductDto.MediaUrls)
+                {
+                    int mediaTypeId = IsVideo(mediaUrl) ? 1 : 2; // 1 for video, 2 for image
+                    var media = new Media
+                    {
+                        MediaUrl = mediaUrl,
+                        MediaTypeId = mediaTypeId,
+                        IsActive = true
+                    };
+                    _unitOfWork.RepositoryMedia.Insert(media);
+                    await _unitOfWork.CommitAsync(); // Save to get media ID
 
-            return product;
+                    var productMedia = new ProductMedia
+                    {
+                        ProductId = product.Id,
+                        MediaId = media.Id,
+                        IsActive = true
+                    };
+
+                    _unitOfWork.RepositoryProductMedia.Insert(productMedia);
+                    //product.ProductMedia.Add(productMedia);
+                }
+            }
+            if (createProductDto.TagValues != null && createProductDto.TagValues.Any())
+            {
+                foreach (var tagValueStr in createProductDto.TagValues)
+                {
+                    var tagValue = await GetOrCreateTagValueAsync(tagValueStr); // Hàm lấy hoặc tạo tag value
+                    var productTag = new ProductTag
+                    {
+                        ProductId = product.Id,
+                        TagVauleId = tagValue.Id,
+                        IsActive = true
+                    };
+                    product.ProductTags.Add(productTag);
+                }
+            }
+            await _unitOfWork.CommitAsync();
+            var productDto = new ProductDTO
+            {
+                ProductName = product.ProductName,
+                QuantitySold = product.QuantitySold,
+                Description = product.Description,
+                Auther = product.Auther,
+                ProductVariantDTO = product.ProductVariants.Select(v => new ProductVariantDTO
+                {
+                    SizeName = v.Size?.SizeValue,
+                    BrandName = v.Brand?.BrandValue,
+                    ColorName = v.Color?.ColorValue,
+                    Price = v.Price,
+                    Quantity = v.Quantity,
+                    Thumbnail = v.Thumbnail,
+                }).ToList()
+            };
+            return productDto;
         }
 
 
@@ -121,9 +174,6 @@ namespace Service.Service.System.Product
 
         public async Task<Data.Models.Product> UpdateProduct(int productId, UpdateProductDTO updateProductDto)
         {
-            //var product = await _postgresContext.Products
-            //                    .Include(p => p.ProductVariants)
-            //                    .FirstOrDefaultAsync(p => p.Id == productId);
             var product = await _unitOfWork.RepositoryProduct.GetById(productId);
             if (product == null)
             {
@@ -132,23 +182,25 @@ namespace Service.Service.System.Product
 
             // Update the product fields
             product.ProductName = updateProductDto.ProductName;
-            //product.QuantitySold = updateProductDto.QuantitySold;
-            //product.Rate = updateProductDto.Rate;
             product.Description = updateProductDto.Description;
-            //product.Auther = product.Auther;
 
             // Remove existing product variants
-            var existingVariants = product.ProductVariants.ToList();
-            _unitOfWork.RepositoryVariant.RemoveRange(existingVariants);
-            product.ProductVariants.Clear();
-
+            var existingVariants = await _unitOfWork.RepositoryProductVariant.GetListByCondition(c => c.ProductId == productId);
+            foreach (var variant in existingVariants)
+            {
+                if (!string.IsNullOrEmpty(variant.Thumbnail))
+                {
+                    await _mediaHelper.DeleteFileFromFirebase(variant.Thumbnail); // Implement this method
+                }
+            }
+            _unitOfWork.RepositoryProductVariant.RemoveRange(existingVariants);
             // Add new product variants
             foreach (var variantDto in updateProductDto.ProductVariants)
             {
-                // Handle Size
                 var size = await GetOrCreateSizeAsync(variantDto.SizeName);
                 var brand = await GetOrCreateBrandAsync(variantDto.BrandName);
                 var color = await GetOrCreateColorAsync(variantDto.ColorName);
+                var saveimage = await _mediaHelper.SaveMediaBase64(variantDto.Thumbnail, "ProductVariant");
 
                 var productVariant = new ProductVariant
                 {
@@ -158,10 +210,59 @@ namespace Service.Service.System.Product
                     ColorId = color?.Id,
                     Price = variantDto.Price,
                     Quantity = variantDto.Quantity,
+                    Thumbnail = saveimage.url,
                     IsActive = true,
                 };
 
                 product.ProductVariants.Add(productVariant);
+            }
+
+            // Update media
+            if (updateProductDto.MediaUrls != null && updateProductDto.MediaUrls.Any())
+            {
+                var existingMedia = await _unitOfWork.RepositoryProductMedia.GetListByCondition(m => m.ProductId == productId);
+                _unitOfWork.RepositoryProductMedia.RemoveRange(existingMedia);
+
+                foreach (var mediaUrl in updateProductDto.MediaUrls)
+                {
+                    int mediaTypeId = IsVideo(mediaUrl) ? 1 : 2;
+                    var media = new Media
+                    {
+                        MediaUrl = mediaUrl,
+                        MediaTypeId = mediaTypeId,
+                        IsActive = true
+                    };
+                    _unitOfWork.RepositoryMedia.Insert(media);
+                    await _unitOfWork.CommitAsync();
+
+                    var productMedia = new ProductMedia
+                    {
+                        ProductId = product.Id,
+                        MediaId = media.Id,
+                        IsActive = true
+                    };
+
+                    _unitOfWork.RepositoryProductMedia.Insert(productMedia);
+                }
+            }
+
+            // Update tags
+            if (updateProductDto.TagValues != null && updateProductDto.TagValues.Any())
+            {
+                var existingTags = await _unitOfWork.RepositoryProductTag.GetListByCondition(t => t.ProductId == productId);
+                _unitOfWork.RepositoryProductTag.RemoveRange(existingTags);
+
+                foreach (var tagValueStr in updateProductDto.TagValues)
+                {
+                    var tagValue = await GetOrCreateTagValueAsync(tagValueStr);
+                    var productTag = new ProductTag
+                    {
+                        ProductId = product.Id,
+                        TagVauleId = tagValue.Id,
+                        IsActive = true
+                    };
+                    product.ProductTags.Add(productTag);
+                }
             }
 
             // Save changes to the database
@@ -170,6 +271,7 @@ namespace Service.Service.System.Product
 
             return product;
         }
+
 
         public async Task<Data.Models.Product> GetProduct(int id)
         {
@@ -185,7 +287,21 @@ namespace Service.Service.System.Product
             // Fetch the related product variants using the UnitOfWork repository
             var productVariants = await _unitOfWork.RepositoryVariant
                 .GetAll(pv => pv.ProductId == id);
-
+            var tags = await _unitOfWork.RepositoryProductTag
+                .GetAll(pv => pv.ProductId == id);
+            var media = await _unitOfWork.RepositoryProductMedia
+                .GetAll(pv => pv.ProductId == id);
+            product.ProductTags = tags.Select(pt => new ProductTag
+            {
+                TagVaule = pt.TagVaule,
+                IsActive =true
+            }).ToList();
+            product.ProductMedia = media.Select(pm => new ProductMedia
+            {
+                MediaId = pm.MediaId,
+                IsActive=true
+            }).ToList();    
+                
             // Map the product variants to the desired format
             product.ProductVariants = productVariants.Select(pv => new ProductVariant
             {
@@ -204,9 +320,67 @@ namespace Service.Service.System.Product
 
         }
 
-        public Task<Data.Models.Product> DeleteProduct(int productid)
+        public async Task<ApiResult<bool>> DeleteProduct(int productid)
         {
-            throw new NotImplementedException();
+            var product = await _unitOfWork.RepositoryProduct.GetById(productid);
+
+            // Kiểm tra nếu sản phẩm không tồn tại
+            if (product == null)
+            {
+                throw new KeyNotFoundException("Product not found");
+            }
+
+            // Xóa các biến thể của sản phẩm trước
+            var productVariants = await _unitOfWork.RepositoryVariant.GetListByCondition(pv => pv.ProductId == productid);
+            if (productVariants.Any())
+            {
+                _unitOfWork.RepositoryVariant.RemoveRange(productVariants);
+            }
+
+            // Xóa sản phẩm
+            _unitOfWork.RepositoryProduct.Delete(product);
+
+            // Lưu các thay đổi vào cơ sở dữ liệu
+            await _unitOfWork.CommitAsync();
+
+            return new ApiResult<bool> { Success = true, message = "Product deleted successfully" };
+        }
+
+        public async Task<IEnumerable<Data.Models.Product>> GetProducts()
+        {
+            var products = await _unitOfWork.RepositoryProduct.GetAllWithVariants();
+
+            return products;
+        }
+        private bool IsVideo(string url)
+        {
+            var videoExtensions = new List<string> { ".mp4", ".avi", ".mov", ".wmv", ".flv" };
+            return videoExtensions.Any(ext => url.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+        }
+        public async Task<IEnumerable<Data.Models.Product>> SearchProductsByName(string productName)
+        {
+            var products = await _unitOfWork.RepositoryProduct
+        .GetListProductbyId(p => p.ProductName.ToLower().Contains(productName.ToLower()))
+        .ToListAsync(); ;
+
+            if (products == null || !products.Any())
+            {
+                return new List<Data.Models.Product>();
+            }
+
+            return products;
+        }
+        private async Task<TagValue> GetOrCreateTagValueAsync(string value)
+        {
+            var existingTagValue = await _unitOfWork.RepositoryTagValue.GetSingleByCondition(tv => tv.Value == value);
+            if (existingTagValue != null)
+            {
+                return existingTagValue;
+            }
+            var newTagValue = new TagValue { Value = value };
+            _unitOfWork.RepositoryTagValue.Insert(newTagValue);
+            await _unitOfWork.CommitAsync();
+            return newTagValue;
         }
     }
 }

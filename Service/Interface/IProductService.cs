@@ -1,4 +1,5 @@
 ﻿using Data.Models;
+using Data.ViewModel;
 using Data.ViewModel.Product;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,10 +7,12 @@ namespace Service.Repo
 {
     public interface IProductService
     {
-        Task<Product> CreateProduct(CreateProductDTO createProductDto);
+        Task<ProductDTO> CreateProduct(CreateProductDTO createProductDto);
         Task<Product> UpdateProduct(int productId, UpdateProductDTO updateProductDto);
         Task<Product> GetProduct(int id);
-        Task<Product> DeleteProduct(int productid);
-        Task<ActionResult<IEnumerable<Product>>> GetProducts();
+        Task<ApiResult<bool>> DeleteProduct(int productid);
+        Task<IEnumerable<Product>> GetProducts();
+        Task<IEnumerable<Product>> SearchProductsByName(string productName);
+
     }
 }
