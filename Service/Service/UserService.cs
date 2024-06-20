@@ -130,9 +130,23 @@ namespace Service.Service
 
         }
     
-        public async Task<IEnumerable<User>> GetAll()
+        public async Task<IEnumerable<UserVM>> GetAll()
         {
-            return await _unitOfWork.RepositoryUser.GetAll();
+
+            var users =  await _unitOfWork.RepositoryUser.GetAll();
+            var result = users.Select(x => new UserVM()
+            {
+                Address = x.Address,
+                Avatar = x.Avatar,
+                Birthday = x.Birthday,
+                EmailComfirm = x.EmailConfirmed,
+                Firstname = x.Firstname,
+                Lastname = x.Lastname,
+                PhoneNumber = x.PhoneNumber,
+                UserEmail = x.Email,
+                UserName = x.UserName
+            });
+            return result;
         }
         public async Task<IEnumerable<User>> Search(string key, int pageIndex, int pageSize)
         {

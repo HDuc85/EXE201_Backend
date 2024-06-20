@@ -83,6 +83,14 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
   options.TokenLifespan = TimeSpan.FromMinutes(15);
 });
 
+// Add CROS 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        builder => builder.WithOrigins("http://localhost:3001", "http://https://68.183.186.61:3001", "http://catcake.onthewifi.com")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod());
+});
 
 // Add Authen
 builder.Services.AddTokenBearer();
@@ -93,11 +101,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<StartupBase>();
 
 builder.Services.AddMvc();
 //builder.Services.AddControllers();
-builder.Services.AddControllers()
-            .AddJsonOptions(options =>
-            {
-              options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-            });
+builder.Services.AddControllers();
+           
 
 //Add EmailConfig 
 builder.Services.AddEmailConfig();
@@ -148,9 +153,9 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 
-
 app.MapControllers();
 app.UseRouting();
+app.UseCors("AllowSpecificOrigins");
 app.MapDefaultControllerRoute();
 
 app.UseAuthorization();

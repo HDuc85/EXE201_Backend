@@ -18,7 +18,7 @@ namespace Service.Interface
         Task<User> FindById(Guid userId);
         Task<User> FindByUsername(string username);
         Task<ApiResult<bool>> ForgetPassword(string email, string host);
-        Task<IEnumerable<User>> GetAll();
+        Task<IEnumerable<UserVM>> GetAll();
         Task<IEnumerable<User>> GetPageSize(int pageIndex, int pageSize);
         Task<(ApiResult<User>, string)> Register(RegisterRequest registerRequest);
         Task RemoveRole(Guid id, string[] roles);
