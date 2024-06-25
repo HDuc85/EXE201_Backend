@@ -12,12 +12,11 @@ using Data.ViewModel.Helper;
 using Service.Helper;
 using Service.Repo;
 using Service.Service.System.Product;
+
 using Service.Service.System.Tag;
 using Service.Service.System.Voucher;
-using Service.Helper.Email;
-using Service.Helper.Media;
-using Service.Helper.Address;
-using Exe201_backend.Middleware;
+using Newtonsoft.Json;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -86,10 +85,10 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 // Add CROS 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigins",
-        builder => builder.WithOrigins("http://localhost:3001", "http://https://68.183.186.61:3001", "http://catcake.onthewifi.com")
-                          .AllowAnyHeader()
-                          .AllowAnyMethod());
+  options.AddPolicy("AllowSpecificOrigins",
+      builder => builder.WithOrigins("http://localhost:3001", "http://https://68.183.186.61:3001", "http://catcake.onthewifi.com")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
 });
 
 // Add Authen
@@ -101,9 +100,17 @@ builder.Services.AddValidatorsFromAssemblyContaining<StartupBase>();
 
 builder.Services.AddMvc();
 //builder.Services.AddControllers();
-builder.Services.AddControllers();
-           
-
+builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+              options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+            });
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+  options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+  options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+  options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Ignore;
+});
 //Add EmailConfig 
 builder.Services.AddEmailConfig();
 builder.Services.AddScoped<IRepository<Product>, Repository<Product>>();
@@ -159,6 +166,12 @@ app.UseCors("AllowSpecificOrigins");
 app.MapDefaultControllerRoute();
 
 app.UseAuthorization();
-app.UseMiddleware<BannedUserMiddleware>();
+app.UseAuthentication();
+
+app.UseAuthorization();
+app.UseEndpoints(endpoints =>
+{
+  endpoints.MapControllers();
+});
 
 app.Run();

@@ -1,4 +1,6 @@
-﻿namespace Data.ViewModel.Product
+using Data.Models;
+
+namespace Data.ViewModel.Product
 {
 
     public class ProductDTO
@@ -18,6 +20,12 @@
         public string? Thumbnail { get; set; }
         public double? Price { get; set; }
         public int Quantity { get; set; }
+
+        public virtual ICollection<ProductMediaDTO> ProductMedia { get; set; } = new List<ProductMediaDTO>();
+
+        public virtual ICollection<ProductTagDTO> ProductTags { get; set; } = new List<ProductTagDTO>();
+
+        public virtual ICollection<ProductVariantDTO> ProductVariants { get; set; } = new List<ProductVariantDTO>();
     }
 
 }

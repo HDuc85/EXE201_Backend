@@ -11,12 +11,16 @@ using Data.Models;
 using Service.Interface;
 using Service.Repo;
 using Data.ViewModel.Product;
+
 using Data.ViewModel;
 using static System.Net.Mime.MediaTypeNames;
 using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
+
 using Service.Helper.Media;
+
+
 
 namespace Service.Service.System.Product
 {
@@ -85,6 +89,7 @@ namespace Service.Service.System.Product
                     _unitOfWork.RepositoryMedia.Insert(media);
                     await _unitOfWork.CommitAsync(); // Save to get media ID
 
+
                     var productMedia = new ProductMedia
                     {
                         ProductId = product.Id,
@@ -128,6 +133,7 @@ namespace Service.Service.System.Product
                 }).ToList()
             };
             return productDto;
+
         }
 
 
@@ -295,14 +301,14 @@ namespace Service.Service.System.Product
             product.ProductTags = tags.Select(pt => new ProductTag
             {
                 TagVaule = pt.TagVaule,
-                IsActive =true
+                IsActive = true
             }).ToList();
             product.ProductMedia = media.Select(pm => new ProductMedia
             {
                 MediaId = pm.MediaId,
-                IsActive=true
-            }).ToList();    
-                
+                IsActive = true
+            }).ToList();
+
             // Map the product variants to the desired format
             product.ProductVariants = productVariants.Select(pv => new ProductVariant
             {
@@ -323,6 +329,7 @@ namespace Service.Service.System.Product
 
         public async Task<ApiResult<bool>> DeleteProduct(int productid)
         {
+
             var product = await _unitOfWork.RepositoryProduct.GetById(productid);
 
             // Kiểm tra nếu sản phẩm không tồn tại
@@ -349,10 +356,15 @@ namespace Service.Service.System.Product
 
         public async Task<IEnumerable<Data.Models.Product>> GetProducts()
         {
-            var products = await _unitOfWork.RepositoryProduct.GetAllWithVariants();
+            var query = _unitOfWork.RepositoryProduct.GetAllWithCondition()
+                                                     .Include(x => x.ProductVariants)
+                                                     .Include(y => y.ProductMedia)
+                                                     .Include(z => z.ProductTags);
 
+            var products = await query.ToListAsync();
             return products;
         }
+
         private bool IsVideo(string url)
         {
             var videoExtensions = new List<string> { ".mp4", ".avi", ".mov", ".wmv", ".flv" };
@@ -360,17 +372,14 @@ namespace Service.Service.System.Product
         }
         public async Task<IEnumerable<Data.Models.Product>> SearchProductsByName(string productName)
         {
-            var products = await _unitOfWork.RepositoryProduct
-        .GetListProductbyId(p => p.ProductName.ToLower().Contains(productName.ToLower()))
-        .ToListAsync(); ;
-
-            if (products == null || !products.Any())
-            {
-                return new List<Data.Models.Product>();
-            }
-
-            return products;
+            var products = _unitOfWork.RepositoryProduct.GetAllWithCondition(p => p.ProductName.Contains(productName))
+                                                        .Include(p => p.ProductVariants)
+                                                        .Include(p => p.ProductMedia)
+                                                        .Include(p => p.ProductTags);
+            var productList = await products.ToListAsync();
+            return productList ?? new List<Data.Models.Product>();
         }
+
         private async Task<TagValue> GetOrCreateTagValueAsync(string value)
         {
             var existingTagValue = await _unitOfWork.RepositoryTagValue.GetSingleByCondition(tv => tv.Value == value);
@@ -382,6 +391,7 @@ namespace Service.Service.System.Product
             _unitOfWork.RepositoryTagValue.Insert(newTagValue);
             await _unitOfWork.CommitAsync();
             return newTagValue;
+
         }
     }
 }

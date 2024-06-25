@@ -48,7 +48,7 @@ namespace Exe201_backend.Controllers
         }
         [HttpPost]
         [Authorize(Roles = "admin")]
-        public async Task<ActionResult<ProductDTO>> CreateProduct(CreateProductDTO createProductDto)
+        public async Task<ActionResult<Product>> CreateProduct([FromForm] CreateProductDTO createProductDto)
         {
             var product = await _productService.CreateProduct(createProductDto);
             return Ok(product);
@@ -56,7 +56,7 @@ namespace Exe201_backend.Controllers
         [HttpPut("UpdateProduct")]
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<Product>> UpdateProduct(int productId, UpdateProductDTO updateProductDto)
-{
+        {
             var product = await _productService.UpdateProduct(productId, updateProductDto);
             return Ok(product);
         }
@@ -69,7 +69,7 @@ namespace Exe201_backend.Controllers
             return BadRequest(result);
         }
         [HttpGet("SearchProductsbyName{productname}")]
-        public async Task<ActionResult<Product>> SearchProductsbyName(string productname) 
+        public async Task<ActionResult<Product>> SearchProductsbyName(string productname)
         {
             var products = await _productService.SearchProductsByName(productname);
 
