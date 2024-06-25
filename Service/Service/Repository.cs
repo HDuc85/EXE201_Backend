@@ -24,7 +24,18 @@ namespace Service.Service
                 return await _postgresContext.Set<T>().ToListAsync();
              return await _postgresContext.Set<T>().Where(expression).ToListAsync();
         }
+<<<<<<< Updated upstream
         public async Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null,int pageIndex = 1, int pageSize = 5)
+=======
+        public IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> expression = null)
+        {
+            if (expression == null)
+                return _postgresContext.Set<T>();
+            return _postgresContext.Set<T>().Where(expression);
+        }
+
+        public async Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null, int pageIndex = 1, int pageSize = 5)
+>>>>>>> Stashed changes
         {
             if (pageIndex == 0) pageIndex = 1;
             if (pageSize == 0) pageSize = 5;
@@ -90,5 +101,15 @@ namespace Service.Service
         {
             _postgresContext.RemoveRange(entities);
         }
+<<<<<<< Updated upstream
+=======
+        public async Task<IEnumerable<T>> GetListByCondition(Expression<Func<T, bool>> expression = null)
+        {
+            if (expression == null)
+                return await _postgresContext.Set<T>().ToListAsync();
+            return await _postgresContext.Set<T>().Where(expression).ToListAsync();
+        }
+
+>>>>>>> Stashed changes
     }
 }

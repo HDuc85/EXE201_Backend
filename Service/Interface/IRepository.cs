@@ -15,5 +15,10 @@ namespace Service.Interface
         Task Insert(T entity);
         void Update(T entity);
         void RemoveRange(IEnumerable<T> entities);
+<<<<<<< Updated upstream
+=======
+        Task<IEnumerable<T>> GetListByCondition(Expression<Func<T, bool>> expression = null);
+        IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> expression = null);
+>>>>>>> Stashed changes
     }
 }

@@ -12,6 +12,12 @@ using Data.ViewModel.Helper;
 using Service.Helper;
 using Service.Repo;
 using Service.Service.System.Product;
+<<<<<<< Updated upstream
+=======
+using Service.Service.System.Tag;
+using Service.Service.System.Voucher;
+using Newtonsoft.Json;
+>>>>>>> Stashed changes
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -90,7 +96,12 @@ builder.Services.AddControllers()
             {
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
             });
-
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+    options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Ignore;
+});
 //Add EmailConfig 
 builder.Services.AddEmailConfig();
 builder.Services.AddScoped<IRepository<Product>, Repository<Product>>();
@@ -139,4 +150,12 @@ app.MapDefaultControllerRoute();
 
 app.UseAuthorization();
 app.UseAuthentication();
+<<<<<<< Updated upstream
+=======
+app.UseAuthorization();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
+>>>>>>> Stashed changes
 app.Run();

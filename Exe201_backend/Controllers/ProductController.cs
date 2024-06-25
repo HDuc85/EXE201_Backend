@@ -42,7 +42,11 @@ namespace Exe201_backend.Controllers
         }
         [HttpPost]
         [Authorize(Roles = "admin")]
+<<<<<<< Updated upstream
         public async Task<ActionResult<Product>> CreateProduct([FromForm] CreateProductDTO createProductDto)
+=======
+        public async Task<ActionResult<Data.Models.Product>> CreateProduct(CreateProductDTO createProductDto)
+>>>>>>> Stashed changes
         {
             var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
             var id = GetUserIdFromToken(token);

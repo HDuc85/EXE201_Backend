@@ -11,6 +11,16 @@ using Data.Models;
 using Service.Interface;
 using Service.Repo;
 using Data.ViewModel.Product;
+<<<<<<< Updated upstream
+=======
+using Data.ViewModel;
+using static System.Net.Mime.MediaTypeNames;
+using Data.ViewModel.User;
+using Firebase.Auth;
+using Service.Helper;
+using Microsoft.EntityFrameworkCore;
+
+>>>>>>> Stashed changes
 
 namespace Service.Service.System.Product
 {
@@ -24,10 +34,13 @@ namespace Service.Service.System.Product
         }
 
 
+<<<<<<< Updated upstream
         Task<ActionResult<IEnumerable<Data.Models.Product>>> IProductService.GetProducts()
         {
             throw new NotImplementedException();
         }
+=======
+>>>>>>> Stashed changes
 
         public async Task<Data.Models.Product> CreateProduct(CreateProductDTO createProductDto)
         {
@@ -73,6 +86,34 @@ namespace Service.Service.System.Product
             _unitOfWork.RepositoryProduct.Insert(product);
             await _unitOfWork.CommitAsync();
 
+<<<<<<< Updated upstream
+=======
+                    var productMedia = new ProductMedia
+                    {
+                        ProductId = product.Id,
+                        MediaId = media.Id,
+                        IsActive = true
+                    };
+
+                    _unitOfWork.RepositoryProductMedia.Insert(productMedia);
+                    //product.ProductMedia.Add(productMedia);
+                }
+            }
+            if (createProductDto.TagValues != null && createProductDto.TagValues.Any())
+            {
+                foreach (var tagValueStr in createProductDto.TagValues)
+                {
+                    var tagValue = await GetOrCreateTagValueAsync(tagValueStr); // Hàm lấy hoặc tạo tag value
+                    var productTag = new ProductTag
+                    {
+                        ProductId = product.Id,
+                        TagVauleId = tagValue.Id,
+                        IsActive = true
+                    };
+                    product.ProductTags.Add(productTag);
+                }
+            }
+>>>>>>> Stashed changes
             return product;
         }
 
@@ -206,7 +247,71 @@ namespace Service.Service.System.Product
 
         public Task<Data.Models.Product> DeleteProduct(int productid)
         {
+<<<<<<< Updated upstream
             throw new NotImplementedException();
+=======
+            var product = await _unitOfWork.RepositoryProduct.GetById(productid);
+
+            // Kiểm tra nếu sản phẩm không tồn tại
+            if (product == null)
+            {
+                throw new KeyNotFoundException("Product not found");
+            }
+
+            // Xóa các biến thể của sản phẩm trước
+            var productVariants = await _unitOfWork.RepositoryVariant.GetListByCondition(pv => pv.ProductId == productid);
+            if (productVariants.Any())
+            {
+                _unitOfWork.RepositoryVariant.RemoveRange(productVariants);
+            }
+
+            // Xóa sản phẩm
+            _unitOfWork.RepositoryProduct.Delete(product);
+
+            // Lưu các thay đổi vào cơ sở dữ liệu
+            await _unitOfWork.CommitAsync();
+
+            return new ApiResult<bool> { Success = true, message = "Product deleted successfully" };
+        }
+
+        public async Task<IEnumerable<Data.Models.Product>> GetProducts()
+        {
+            var query = _unitOfWork.RepositoryProduct.GetAllWithCondition()
+                                                     .Include(x => x.ProductVariants)
+                                                     .Include(y => y.ProductMedia)
+                                                     .Include(z => z.ProductTags);
+
+            var products = await query.ToListAsync();
+            return products;
+        }
+
+        private bool IsVideo(string url)
+        {
+            var videoExtensions = new List<string> { ".mp4", ".avi", ".mov", ".wmv", ".flv" };
+            return videoExtensions.Any(ext => url.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+        }
+        public async Task<IEnumerable<Data.Models.Product>> SearchProductsByName(string productName)
+        {
+            var products = _unitOfWork.RepositoryProduct.GetAllWithCondition(p => p.ProductName.Contains(productName))
+                                                        .Include(p => p.ProductVariants)
+                                                        .Include(p => p.ProductMedia)
+                                                        .Include(p => p.ProductTags);
+            var productList = await products.ToListAsync();
+            return productList ?? new List<Data.Models.Product>();
+        }
+
+        private async Task<TagValue> GetOrCreateTagValueAsync(string value)
+        {
+            var existingTagValue = await _unitOfWork.RepositoryTagValue.GetSingleByCondition(tv => tv.Value == value);
+            if (existingTagValue != null)
+            {
+                return existingTagValue;
+            }
+            var newTagValue = new TagValue { Value = value };
+            _unitOfWork.RepositoryTagValue.Insert(newTagValue);
+            await _unitOfWork.CommitAsync();
+            return newTagValue;
+>>>>>>> Stashed changes
         }
     }
 }
