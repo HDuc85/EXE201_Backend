@@ -22,7 +22,15 @@ namespace Service.Service
                 return await _postgresContext.Set<T>().ToListAsync();
             return await _postgresContext.Set<T>().Where(expression).ToListAsync();
         }
+        public IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> expression = null)
+        {
+            if (expression == null)
+                return _postgresContext.Set<T>();
+            return _postgresContext.Set<T>().Where(expression);
+        }
+
         public async Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null, int pageIndex = 1, int pageSize = 5)
+
         {
             if (pageIndex == 0) pageIndex = 1;
             if (pageSize == 0) pageSize = 5;
@@ -103,7 +111,6 @@ namespace Service.Service
                 return await _postgresContext.Set<T>().ToListAsync();
             return await _postgresContext.Set<T>().Where(expression).ToListAsync();
         }
-
 
     }
 }

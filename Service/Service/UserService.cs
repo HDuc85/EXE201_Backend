@@ -250,9 +250,14 @@ namespace Service.Service
 
             if (!result.Succeeded)
             {
-                return new(new ApiResult<User>
-                { Success = false, message = "Something fail when Created" }, "");
+                StringBuilder sb = new StringBuilder();
+                foreach (var error in result.Errors)
+                {
+                    sb.AppendLine($"Code: {error.Code}, Description: {error.Description}");
+                }
 
+                  return new(new ApiResult<User>
+                  { Success = false, message = sb.ToString() }, "");
             }
 
 

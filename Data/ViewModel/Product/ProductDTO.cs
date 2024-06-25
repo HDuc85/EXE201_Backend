@@ -10,9 +10,9 @@ namespace Data.ViewModel.Product
         //public double? Rate { get; set; }
         public string? Description { get; set; }
         public Guid? Auther { get; set; }
-        public List<ProductVariantDTO> ProductVariantDTO { get; set; }
+        public List<ProductVariantDTOO> ProductVariantDTO { get; set; }
     }
-    public class ProductVariantDTO
+    public class ProductVariantDTOO
     {
         public string? SizeName { get; set; }
         public string? BrandName { get; set; }

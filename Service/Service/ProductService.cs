@@ -122,7 +122,7 @@ namespace Service.Service.System.Product
                 QuantitySold = product.QuantitySold,
                 Description = product.Description,
                 Auther = product.Auther,
-                ProductVariantDTO = product.ProductVariants.Select(v => new ProductVariantDTO
+                ProductVariantDTO = product.ProductVariants.Select(v => new ProductVariantDTOO
                 {
                     SizeName = v.Size?.SizeValue,
                     BrandName = v.Brand?.BrandValue,
