@@ -17,7 +17,6 @@ namespace Service.Interface
         void Update(T entity);
         void RemoveRange(IEnumerable<T> entities);
         Task<IEnumerable<T>> GetListByCondition(Expression<Func<T, bool>> expression = null);
-        Task<IEnumerable<Product>> GetAllWithVariants();
-        IQueryable<Product> GetListProductbyId(Expression<Func<Product, bool>> predicate);
+        IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> expression = null);
     }
 }

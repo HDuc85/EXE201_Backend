@@ -5,6 +5,7 @@ using Data.ViewModel.Voucher;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Service.Interface;
+using Service.Service;
 using System.Collections.Generic;
 
 namespace Exe201_backend.Controllers
@@ -13,28 +14,27 @@ namespace Exe201_backend.Controllers
     [ApiController]
     public class TagController : ControllerBase
     {
-        private readonly PostgresContext _context;
+        private readonly UnitOfWork _unitOfWork;
         private readonly ITagService _tagService;
-        public TagController (PostgresContext context, ITagService tagService)
+        public TagController (ITagService tagService, UnitOfWork unitOfWork)
         {
-            _context = context;
             _tagService = tagService;
+            _unitOfWork = unitOfWork;
         }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tag>>> GetTags()
         {
-            var tags = await _context.Tags.ToListAsync();
-            if (tags == null)
-            {
-                return NotFound();
-            }
-            return Ok(tags);
+            var query = _unitOfWork.RepositoryTag.GetAllWithCondition()
+                                                     .Include(x => x.TagValues);
+
+            var tags = await query.ToListAsync();
+            return tags;
 
         }
         [HttpGet("{id}")]
         public async Task<ActionResult<Tag>> GetTag(int id)
         {
-            var tag = await _context.Tags.FindAsync(id);
+            var tag = await _unitOfWork.RepositoryTag.GetSingleByCondition(p => p.Id == id);
             if (tag == null)
             {
                 return NotFound();

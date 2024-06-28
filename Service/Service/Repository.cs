@@ -21,6 +21,12 @@ namespace Service.Service
                 return await _postgresContext.Set<T>().ToListAsync();
             return await _postgresContext.Set<T>().Where(expression).ToListAsync();
         }
+        public IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> expression = null)
+        {
+            if (expression == null)
+                return _postgresContext.Set<T>();
+            return _postgresContext.Set<T>().Where(expression);
+        }
 
         public async Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null, int pageIndex = 1, int pageSize = 5)
         {
@@ -93,23 +99,6 @@ namespace Service.Service
             if (expression == null)
                 return await _postgresContext.Set<T>().ToListAsync();
             return await _postgresContext.Set<T>().Where(expression).ToListAsync();
-        }
-        public async Task<IEnumerable<Product>> GetAllWithVariants()
-        {
-            return await _postgresContext.Products
-                                 .Include(p => p.ProductVariants)
-                                 .Include(pv => pv.ProductTags)
-                                 .Include(pm => pm.ProductMedia)
-                                 .ToListAsync();
-        }
-        public IQueryable<Product> GetListProductbyId(Expression<Func<Product, bool>> predicate)
-        {
-            return _postgresContext.Products
-                .Where(predicate)
-                .Include(p => p.ProductVariants) // Include related data
-                .Include(p => p.ProductTags) // Include related data
-                .Include(p => p.ProductMedia)
-                .ThenInclude(pm => pm.Media); ;
         }
 
     }

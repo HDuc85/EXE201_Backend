@@ -16,6 +16,8 @@ using static System.Net.Mime.MediaTypeNames;
 using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Service.Service.System.Product
 {
@@ -35,7 +37,7 @@ namespace Service.Service.System.Product
 
 
 
-        public async Task<ProductDTO> CreateProduct(CreateProductDTO createProductDto)
+        public async Task<Data.Models.Product> CreateProduct(CreateProductDTO createProductDto)
         {
             var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var product = new Data.Models.Product
@@ -109,24 +111,7 @@ namespace Service.Service.System.Product
                     product.ProductTags.Add(productTag);
                 }
             }
-            await _unitOfWork.CommitAsync();
-            var productDto = new ProductDTO
-            {
-                ProductName = product.ProductName,
-                QuantitySold = product.QuantitySold,
-                Description = product.Description,
-                Auther = product.Auther,
-                ProductVariantDTO = product.ProductVariants.Select(v => new ProductVariantDTO
-                {
-                    SizeName = v.Size?.SizeValue,
-                    BrandName = v.Brand?.BrandValue,
-                    ColorName = v.Color?.ColorValue,
-                    Price = v.Price,
-                    Quantity = v.Quantity,
-                    Thumbnail = v.Thumbnail,
-                }).ToList()
-            };
-            return productDto;
+            return product;
         }
 
 
@@ -348,10 +333,15 @@ namespace Service.Service.System.Product
 
         public async Task<IEnumerable<Data.Models.Product>> GetProducts()
         {
-            var products = await _unitOfWork.RepositoryProduct.GetAllWithVariants();
+            var query = _unitOfWork.RepositoryProduct.GetAllWithCondition()
+                                                     .Include(x => x.ProductVariants)
+                                                     .Include(y => y.ProductMedia)
+                                                     .Include(z => z.ProductTags);
 
+            var products = await query.ToListAsync();
             return products;
         }
+
         private bool IsVideo(string url)
         {
             var videoExtensions = new List<string> { ".mp4", ".avi", ".mov", ".wmv", ".flv" };
@@ -359,17 +349,14 @@ namespace Service.Service.System.Product
         }
         public async Task<IEnumerable<Data.Models.Product>> SearchProductsByName(string productName)
         {
-            var products = await _unitOfWork.RepositoryProduct
-        .GetListProductbyId(p => p.ProductName.ToLower().Contains(productName.ToLower()))
-        .ToListAsync(); ;
-
-            if (products == null || !products.Any())
-            {
-                return new List<Data.Models.Product>();
-            }
-
-            return products;
+            var products = _unitOfWork.RepositoryProduct.GetAllWithCondition(p => p.ProductName.Contains(productName))
+                                                        .Include(p => p.ProductVariants)
+                                                        .Include(p => p.ProductMedia)
+                                                        .Include(p => p.ProductTags);
+            var productList = await products.ToListAsync();
+            return productList ?? new List<Data.Models.Product>();
         }
+
         private async Task<TagValue> GetOrCreateTagValueAsync(string value)
         {
             var existingTagValue = await _unitOfWork.RepositoryTagValue.GetSingleByCondition(tv => tv.Value == value);

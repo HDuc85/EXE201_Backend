@@ -17,6 +17,7 @@ using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
 using Data.ViewModel.Tag;
+using System.Linq;
 
 namespace Service.Service.System.Tag
 {
@@ -55,18 +56,35 @@ namespace Service.Service.System.Tag
         public async Task<ApiResult<bool>> DeleteTag(int Id)
         {
             var tag = await _unitOfWork.RepositoryTag.GetById(Id);
-            var tagvalue = await _unitOfWork.RepositoryTagValue.GetListByCondition(c => c.TagId == Id);
             if (tag == null)
             {
                 return new ApiResult<bool> { Success = false, message = "Tag not found" };
             }
-            _unitOfWork.RepositoryTagValue.RemoveRange(tagvalue);
-            tag.IsActive= false;
+
+            var tagvalue = await _unitOfWork.RepositoryTagValue.GetListByCondition(c => c.TagId == Id);
+
+            if (tagvalue == null || !tagvalue.Any())
+            {
+                return new ApiResult<bool> { Success = false, message = "Tag values not found" };
+            }
+
+            var tagValueIds = tagvalue.Select(tv => tv.Id).ToList();
+
+            var productTags = await _unitOfWork.RepositoryProductTag.GetListByCondition(pt => pt.TagVauleId.HasValue && tagValueIds.Contains(pt.TagVauleId.Value));
+            foreach (var productTag in productTags)
+            {
+                productTag.IsActive = false;
+                _unitOfWork.RepositoryProductTag.Update(productTag);
+            }
+
+            //_unitOfWork.RepositoryTagValue.RemoveRange(tagvalue);
+            tag.IsActive = false;
             _unitOfWork.RepositoryTag.Update(tag);
             await _unitOfWork.CommitAsync();
 
             return new ApiResult<bool> { Success = true, message = "Tag deleted successfully" };
         }
+
 
         public async Task<ApiResult<bool>> UpdateTag(UpdateTagDTO updateTagDTO, int id)
         {
