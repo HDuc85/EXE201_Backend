@@ -13,6 +13,7 @@ namespace Service.Repo
         Task<ApiResult<bool>> DeleteProduct(int productid);
         Task<IEnumerable<Product>> GetProducts();
         Task<IEnumerable<Product>> SearchProductsByName(string productName);
+        Task<IEnumerable<ProductDTO>> GetProductsbyTagValue(string tagValue);
 
     }
 }

@@ -81,6 +81,17 @@ namespace Exe201_backend.Controllers
             return Ok(products);
 
         }
+        [HttpGet("GetProductsbyTagValue{tagvalue}")]
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsbyTagValue(string tagvalue)
+        {
+            var products = await _productService.GetProductsbyTagValue(tagvalue);
 
+            if (products == null || !products.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(products);
+        }
     }
 }
