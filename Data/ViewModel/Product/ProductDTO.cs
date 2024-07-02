@@ -10,16 +10,6 @@ namespace Data.ViewModel.Product
         //public double? Rate { get; set; }
         public string? Description { get; set; }
         public Guid? Auther { get; set; }
-        public List<ProductVariantDTOO> ProductVariantDTO { get; set; }
-    }
-    public class ProductVariantDTOO
-    {
-        public string? SizeName { get; set; }
-        public string? BrandName { get; set; }
-        public string? ColorName { get; set; }
-        public string? Thumbnail { get; set; }
-        public double? Price { get; set; }
-        public int Quantity { get; set; }
 
         public virtual ICollection<ProductMediaDTO> ProductMedia { get; set; } = new List<ProductMediaDTO>();
 

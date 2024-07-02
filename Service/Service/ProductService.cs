@@ -17,6 +17,8 @@ using static System.Net.Mime.MediaTypeNames;
 using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
+using Microsoft.EntityFrameworkCore;
+
 
 using Service.Helper.Media;
 
@@ -40,7 +42,7 @@ namespace Service.Service.System.Product
 
 
 
-        public async Task<ProductDTO> CreateProduct(CreateProductDTO createProductDto)
+        public async Task<Data.Models.Product> CreateProduct(CreateProductDTO createProductDto)
         {
             var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var product = new Data.Models.Product
@@ -115,25 +117,7 @@ namespace Service.Service.System.Product
                     product.ProductTags.Add(productTag);
                 }
             }
-            await _unitOfWork.CommitAsync();
-            var productDto = new ProductDTO
-            {
-                ProductName = product.ProductName,
-                QuantitySold = product.QuantitySold,
-                Description = product.Description,
-                Auther = product.Auther,
-                ProductVariantDTO = product.ProductVariants.Select(v => new ProductVariantDTOO
-                {
-                    SizeName = v.Size?.SizeValue,
-                    BrandName = v.Brand?.BrandValue,
-                    ColorName = v.Color?.ColorValue,
-                    Price = v.Price,
-                    Quantity = v.Quantity,
-                    Thumbnail = v.Thumbnail,
-                }).ToList()
-            };
-            return productDto;
-
+            return product;
         }
 
 
@@ -393,5 +377,42 @@ namespace Service.Service.System.Product
             return newTagValue;
 
         }
+        public async Task<IEnumerable<ProductDTO>> GetProductsbyTagValue(string tagValue)
+        {
+            var query = _unitOfWork.RepositoryProduct.GetAllWithCondition()
+                                                     .Include(x => x.ProductVariants)
+                                                     .Include(y => y.ProductMedia)
+                                                     .Include(z => z.ProductTags)
+                                                     .ThenInclude(pt => pt.TagVaule)
+                                                     .Where(p => p.ProductTags.Any(pt => pt.TagVaule.Value == tagValue && pt.IsActive == true));
+
+            var products = await query.Select(p => new ProductDTO
+            {
+                ProductName = p.ProductName,
+                QuantitySold = p.QuantitySold,
+                Description = p.Description,
+                Auther = p.Auther,
+                ProductVariants = p.ProductVariants.Select(v => new ProductVariantDTO
+                {
+                    Thumbnail = v.Thumbnail,
+                    Price = v.Price,
+                    Quantity = v.Quantity,
+                    IsActive = v.IsActive
+                }).ToList(),
+                ProductMedia = p.ProductMedia.Select(m => new ProductMediaDTO
+                {
+                    Id = m.Id,
+                    ProductId = m.ProductId,
+                }).ToList(),
+                ProductTags = p.ProductTags.Select(t => new ProductTagDTO
+                {
+                    Id = t.Id,
+                    ProductId = t.ProductId,
+                }).ToList()
+            }).ToListAsync();
+
+            return products;
+        }
+
     }
 }

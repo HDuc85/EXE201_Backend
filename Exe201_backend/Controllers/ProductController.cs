@@ -48,7 +48,7 @@ namespace Exe201_backend.Controllers
         }
         [HttpPost]
         [Authorize(Roles = "admin")]
-        public async Task<ActionResult<Product>> CreateProduct([FromForm] CreateProductDTO createProductDto)
+        public async Task<ActionResult<Data.Models.Product>> CreateProduct(CreateProductDTO createProductDto)
         {
             var product = await _productService.CreateProduct(createProductDto);
             return Ok(product);
@@ -81,6 +81,17 @@ namespace Exe201_backend.Controllers
             return Ok(products);
 
         }
+        [HttpGet("GetProductsbyTagValue{tagvalue}")]
+        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProductsbyTagValue(string tagvalue)
+        {
+            var products = await _productService.GetProductsbyTagValue(tagvalue);
 
+            if (products == null || !products.Any())
+            {
+                return NotFound();
+            }
+
+            return Ok(products);
+        }
     }
 }

@@ -85,6 +85,7 @@ namespace Service.Service.System.Tag
             return new ApiResult<bool> { Success = true, message = "Tag deleted successfully" };
         }
 
+
         public async Task<ApiResult<bool>> UpdateTag(UpdateTagDTO updateTagDTO, int id)
         {
             if (updateTagDTO == null || id <= 0 || string.IsNullOrEmpty(updateTagDTO.TagName))
