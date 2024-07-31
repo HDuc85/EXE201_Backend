@@ -62,6 +62,7 @@ namespace Exe201_backend.Controllers
             return Ok(result.Value);
         }
 
+
         /// <summary>
         /// Check price service of shipping
         /// </summary>
@@ -166,7 +167,21 @@ namespace Exe201_backend.Controllers
             return BadRequest(result.message);
 
         }
+        [HttpPost("CheckAddress")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckAddress([FromBody]string request)
+        {
         
-        
+            var result = await _orderService.CheckAddress(request);
+
+            if (result)
+            {
+                return Ok("Address valid");
+            }
+            return BadRequest("Address invalid");
+
+        }
+
+
     }
 }

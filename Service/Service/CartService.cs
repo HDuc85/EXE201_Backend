@@ -167,6 +167,7 @@ namespace Service.Service
 
                     cartUser.Add(new CartViewModel
                     {
+                        Id = pv.Id,
                         Type = "Product",
                         Name = product.ProductName,
                         Price = pv.Price,
@@ -185,6 +186,7 @@ namespace Service.Service
 
                         cartUser.Add(new CartViewModel
                         {
+                            Id = box.Id,
                             Type = "Box",
                             thumbnail = box.Thumbnail,
                             Quantity = cart.Quantity,
@@ -264,7 +266,7 @@ namespace Service.Service
                     }
 
                     cartUser.Add(new CartViewModel
-                    {
+                    {Id = pv.Id,
                         Type = "Product",
                         Name = product.ProductName,
                         Price = pv.Price,
@@ -282,7 +284,7 @@ namespace Service.Service
                     {
 
                         cartUser.Add(new CartViewModel
-                        {
+                        {Id = box.Id,
                             Type = "Box",
                             thumbnail = box.Thumbnail,
                             Quantity = cart.Quantity,

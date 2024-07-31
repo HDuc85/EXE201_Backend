@@ -6,6 +6,7 @@ namespace Service.Interface
 {
     public interface IOrderService
     {
+        Task<bool> CheckAddress(string inforAddress);
         Task<(Object, int)> CheckShipPrice(InforAddressDTO inforAddress);
         Task<ApiResult<IEnumerable<OrderViewDTO>>> GetAll(string username);
         Task<ApiResult<OrderViewDTO>> GetById(string username, int OrderId);

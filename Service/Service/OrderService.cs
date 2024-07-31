@@ -46,10 +46,60 @@ namespace Service.Service
             4: Collect express fee
          */
 
+        public async Task<bool> CheckAddress(string inforAddress)
+        {
+            var store = await _unitOfWork.repositoryStore.GetSingleByCondition();
+            var senderAddress = await _addressHelper.AddressFormater(store.Address);
+
+
+
+            int? weight = 100;
+
+            var payload = new
+            {
+                SENDER_ADDRESS = $"{senderAddress}",
+                RECEIVER_ADDRESS = $"{inforAddress}",
+                PRODUCT_TYPE = "HH",
+                PRODUCT_WEIGHT = weight,
+                TYPE = 1
+            };
+
+            var jsonPayload = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            var token = await _tokenHandler.GetTokenVTPAsync();
+            string getpriceUrl = _configuration["VTP:GetPriceUrl"];
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("token", token);
+
+                var response = await client.PostAsync(getpriceUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Request failed with status code: {response.StatusCode}");
+                }
+                var responseString = await response.Content.ReadAsStringAsync();
+                JObject jsonResponse = JObject.Parse(responseString);
+                var result = jsonResponse?["status"];
+                if (result == null)
+                {
+                return true;
+
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+
+        }
 
         public async Task<(Object, int)> CheckShipPrice(InforAddressDTO inforAddress)
         {
-            var senderAddress = await _addressHelper.AddressFormater(inforAddress.SenderAddress);
+            var store = await _unitOfWork.repositoryStore.GetSingleByCondition();
+            var senderAddress = await _addressHelper.AddressFormater(store.Address);
             var receiverAddress = await _addressHelper.AddressFormater(inforAddress.ReceiverAddress);
 
 
@@ -432,12 +482,11 @@ namespace Service.Service
             var user = await _userService.UserExits(username);
 
             var store = await _unitOfWork.repositoryStore.
-                                GetSingleByCondition(x =>
-                                x.Address == makeOrder.SenderAddress &
-                                x.Phone == makeOrder.SenderPhone);
-            var senderAddress = await _addressHelper.AddressFormater(makeOrder.SenderAddress);
+                                GetSingleByCondition();
+           
             var receiverAddress = await _addressHelper.AddressFormater(makeOrder.ReceiverAddress);
-            
+            var senderAddress = await _addressHelper.AddressFormater(store.Address);
+
             string paymentUrl = string.Empty;
             var listItem = new List<LIST_ITEM_PAYLOAD>();
             var listCart = await _unitOfWork.RepositoryCart.GetAll(x => x.UserId == user.Id);
@@ -446,12 +495,14 @@ namespace Service.Service
             Order newOrder = new Order()
             {
                 UserId = user.Id,
-                Price = makeOrder.totalPrice,
+               // Price = makeOrder.totalPrice,
                 StatusId = 1,
             };
             await _unitOfWork.RepositoryOrder.Insert(newOrder);
 
             await _unitOfWork.CommitAsync();
+            double totalPrice = 0;
+            int totalWeight = 0;
             foreach (var item in makeOrder.ListCartItem)
             {
                 if (item.Type == 1)
@@ -488,9 +539,12 @@ namespace Service.Service
                         listItem.Add(new()
                         {
                             PRODUCT_NAME = productmother.ProductName + " " + type,
-                            PRODUCT_PRICE = (double)Productitem.Price,
+                            PRODUCT_PRICE = (int)Productitem.Price,
                             PRODUCT_QUANTITY = item.Quantity
                         });
+                        totalPrice += (int)Productitem.Price * item.Quantity;
+                        if(Productitem.weight != null) 
+                        totalWeight += (int)Productitem.weight;
                         listCartorder.Add(product);
                     }
                 }
@@ -513,9 +567,11 @@ namespace Service.Service
                         listItem.Add(new()
                         {
                             PRODUCT_NAME = box.BoxName,
-                            PRODUCT_PRICE = (double)box.Price,
+                            PRODUCT_PRICE = (int)box.Price,
                             PRODUCT_QUANTITY = item.Quantity
                         });
+                        totalPrice += (double)box.Price * item.Quantity;
+                        totalWeight += 100;
                         listCartorder.Add(boxcart);
                     }
                 }
@@ -537,15 +593,15 @@ namespace Service.Service
             var payload = new
             {
                 ORDER_NUMBER = newOrder.Id,
-                SENDER_FULLNAME = makeOrder.SenderName,
+                SENDER_FULLNAME = store.StoreName,
                 SENDER_ADDRESS = senderAddress,
-                SENDER_PHONE = makeOrder.SenderPhone,
+                SENDER_PHONE = store.Phone,
                 RECEIVER_FULLNAME = makeOrder.ReceiverName,
                 RECEIVER_ADDRESS = receiverAddress,
                 RECEIVER_PHONE = makeOrder.ReceiverPhone,
                 PRODUCT_TYPE = "HH",
-                PRODUCT_WEIGHT = makeOrder.Weight,
-                MONEY_COLLECTION = makeOrder.totalPrice,
+                PRODUCT_WEIGHT = totalWeight,
+               // MONEY_COLLECTION = (int)totalPrice,
                 ORDER_PAYMENT = makeOrder.PaymentType,
                 ORDER_SERVICE = makeOrder.OrderService,
                 ORDER_NOTE = makeOrder.OrderNote,
@@ -582,7 +638,7 @@ namespace Service.Service
                     StatusId = newOrder.StatusId,
                     TextLog = $"Order No.{newOrder.Id} Update at {DateTime.Now}"
                 });
-
+                newOrder.Price = totalPrice;
                 await _unitOfWork.CommitAsync();
 
                 if (makeOrder.PaymentType == 2)
