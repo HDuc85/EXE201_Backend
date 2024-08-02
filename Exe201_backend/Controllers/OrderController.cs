@@ -169,10 +169,10 @@ namespace Exe201_backend.Controllers
         }
         [HttpPost("CheckAddress")]
         [AllowAnonymous]
-        public async Task<IActionResult> CheckAddress([FromBody]string request)
+        public async Task<IActionResult> CheckAddress([FromBody]string address)
         {
         
-            var result = await _orderService.CheckAddress(request);
+            var result = await _orderService.CheckAddress(address);
 
             if (result)
             {

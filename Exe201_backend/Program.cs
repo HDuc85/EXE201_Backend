@@ -145,6 +145,7 @@ builder.Services.AddScoped<IAddressHelper, AddressHelper>();
 
 builder.Services.AddScoped<IBoxService, BoxService>();
 builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IAnalyticService, AnalyticService>();
 
 builder.Services.AddScoped<PasswordHasher<User>>();
 //Add validator
