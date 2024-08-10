@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Data.ViewModel.Product
 {
@@ -11,6 +12,7 @@ namespace Data.ViewModel.Product
         public string? Description { get; set; }
         public IFormFile? Thumbnail { get; set; }
         //public Guid? Auther { get; set; }
+        [ModelBinder(BinderType = typeof(FromJsonBinder))]
         public List<CreateProductVariantDTO> ProductVariants { get; set; }
         public List<string>? MediaUrls { get; set; }
         public List<string?> TagValues { get; set; }
