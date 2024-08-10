@@ -17,6 +17,7 @@ namespace Exe201_backend.Controllers
         private readonly UnitOfWork _unitOfWork;
         private readonly ITagService _tagService;
         public TagController (ITagService tagService, UnitOfWork unitOfWork)
+
         {
             _tagService = tagService;
             _unitOfWork = unitOfWork;
@@ -42,7 +43,7 @@ namespace Exe201_backend.Controllers
             return Ok(tag);
         }
         [HttpPost]
-        public async Task<ActionResult<Tag>> CreateTag([FromForm]CreateTagDTO createTagDto)
+        public async Task<ActionResult<Tag>> CreateTag([FromForm] CreateTagDTO createTagDto)
         {
             var product = await _tagService.CreateTag(createTagDto);
             return Ok(product);
@@ -54,9 +55,9 @@ namespace Exe201_backend.Controllers
             return Ok(product);
         }
         [HttpDelete]
-        public async Task<ActionResult<Tag>> DeleteTag([FromForm]int id)
+        public async Task<ActionResult<Tag>> DeleteTag([FromForm] int id)
         {
-            var product = await _tagService.DeleteTag( id);
+            var product = await _tagService.DeleteTag(id);
             return Ok(product);
         }
     }

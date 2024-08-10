@@ -1,6 +1,7 @@
 ﻿using Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Service.Interface;
 using System.Linq.Expressions;
 
@@ -29,6 +30,7 @@ namespace Service.Service
         }
 
         public async Task<IEnumerable<T>> GetPageSize(Expression<Func<T, bool>> expression = null, int pageIndex = 1, int pageSize = 5)
+
         {
             if (pageIndex == 0) pageIndex = 1;
             if (pageSize == 0) pageSize = 5;
@@ -52,19 +54,25 @@ namespace Service.Service
             return await _postgresContext.Set<T>().Where(expression).FirstOrDefaultAsync();
         }
 
+
+
         public void Delete(T entity)
         {
-            EntityEntry entityEntry = _postgresContext.Entry<T>(entity);
-            entityEntry.State = EntityState.Deleted;
+            EntityEntry entityEntry = _postgresContext.Entry(entity);
+            entityEntry.State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
         }
 
         public void Delete(Expression<Func<T, bool>> expression)
         {
             var entities = _postgresContext.Set<T>().Where(expression).ToList();
-            if (entities.Count > 0)
-            {
-                _postgresContext.Set<T>().RemoveRange(entities);
-            }
+            if (entities.Count > 0) _postgresContext.Set<T>().RemoveRange(entities);
+
+
+        }
+        public void Delete(IEnumerable<T> entities)
+        {
+
+            _postgresContext.Set<T>().RemoveRange(entities);
         }
 
         public async Task Insert(T entity)
@@ -83,6 +91,8 @@ namespace Service.Service
             entityEntry.State = EntityState.Modified;
         }
 
+
+
         public virtual IQueryable<T> Table => _postgresContext.Set<T>();
 
         public async Task Commit()
@@ -94,6 +104,7 @@ namespace Service.Service
         {
             _postgresContext.RemoveRange(entities);
         }
+
         public async Task<IEnumerable<T>> GetListByCondition(Expression<Func<T, bool>> expression = null)
         {
             if (expression == null)

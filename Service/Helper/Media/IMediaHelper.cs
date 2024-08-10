@@ -1,6 +1,6 @@
 ﻿using Data.ViewModel.Helper;
 
-namespace Service.Helper
+namespace Service.Helper.Media
 {
     public interface IMediaHelper
     {

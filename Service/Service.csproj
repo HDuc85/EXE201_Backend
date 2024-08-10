@@ -8,8 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Service\System\**" />
+    <Content Remove="Service\System\**" />
+    <EmbeddedResource Remove="Service\System\**" />
+    <None Remove="Service\System\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FirebaseAuthentication.net" Version="3.7.1" />
     <PackageReference Include="FirebaseStorage.net" Version="1.0.3" />
+    <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.5" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.5.2" />
   </ItemGroup>
@@ -20,7 +28,6 @@
 
   <ItemGroup>
     <Folder Include="Repo\" />
-    <Folder Include="Service\System\" />
   </ItemGroup>
 
 </Project>

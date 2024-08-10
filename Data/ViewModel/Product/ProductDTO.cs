@@ -1,4 +1,5 @@
-﻿using Data.Models;
+using Data.Models;
+
 
 namespace Data.ViewModel.Product
 {

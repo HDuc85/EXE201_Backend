@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace Service.Helper
+namespace Service.Helper.Header
 {
     public static class ClaimsPrincipalExtensions
     {

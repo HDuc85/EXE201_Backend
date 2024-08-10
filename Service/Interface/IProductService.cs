@@ -15,5 +15,7 @@ namespace Service.Repo
         Task<IEnumerable<Product>> SearchProductsByName(string productName);
         Task<IEnumerable<ProductDTO>> GetProductsbyTagValue(string tagValue);
 
-    }
+              
+
+        }
 }

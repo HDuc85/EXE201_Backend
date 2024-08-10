@@ -11,14 +11,14 @@ using Data.Models;
 using Service.Interface;
 using Service.Repo;
 using Data.ViewModel.Product;
+
 using Data.ViewModel;
 using static System.Net.Mime.MediaTypeNames;
 using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
 using Microsoft.EntityFrameworkCore;
-
-
+using Service.Helper.Media;
 namespace Service.Service.System.Product
 {
     public class ProductService : IProductService
@@ -85,6 +85,7 @@ namespace Service.Service.System.Product
                     };
                     _unitOfWork.RepositoryMedia.Insert(media);
                     await _unitOfWork.CommitAsync(); // Save to get media ID
+
 
                     var productMedia = new ProductMedia
                     {
@@ -279,14 +280,14 @@ namespace Service.Service.System.Product
             product.ProductTags = tags.Select(pt => new ProductTag
             {
                 TagVaule = pt.TagVaule,
-                IsActive =true
+                IsActive = true
             }).ToList();
             product.ProductMedia = media.Select(pm => new ProductMedia
             {
                 MediaId = pm.MediaId,
-                IsActive=true
-            }).ToList();    
-                
+                IsActive = true
+            }).ToList();
+
             // Map the product variants to the desired format
             product.ProductVariants = productVariants.Select(pv => new ProductVariant
             {
@@ -307,6 +308,7 @@ namespace Service.Service.System.Product
 
         public async Task<ApiResult<bool>> DeleteProduct(int productid)
         {
+
             var product = await _unitOfWork.RepositoryProduct.GetById(productid);
 
             // Kiểm tra nếu sản phẩm không tồn tại
@@ -368,6 +370,7 @@ namespace Service.Service.System.Product
             _unitOfWork.RepositoryTagValue.Insert(newTagValue);
             await _unitOfWork.CommitAsync();
             return newTagValue;
+
         }
         public async Task<IEnumerable<ProductDTO>> GetProductsbyTagValue(string tagValue)
         {

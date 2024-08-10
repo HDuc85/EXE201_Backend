@@ -1,9 +1,12 @@
 ﻿using Data.Models;
 using Data.ViewModel.System;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Service.Interface;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,7 +19,7 @@ namespace Service.Service
     {
         IConfiguration _configuration;
         IUserService _userService;
-        
+        private string _token;
         UserManager<User> _userManager;
         public TokenHandler(IConfiguration configuration, IUserService userService, UserManager<User> userManager)
         {
@@ -200,6 +203,44 @@ namespace Service.Service
             
            
 
+        }
+
+        public async Task<string> GetTokenVTPAsync()
+        {
+            if (string.IsNullOrEmpty(_token))
+            {
+                _token = await FetchTokenAsync();
+            }
+            return _token;
+        }
+        private async Task<string> FetchTokenAsync()
+        {
+            using (var client = new HttpClient())
+            {
+                var payload = new
+                {
+                    USERNAME = _configuration["VTP:Username"],
+                    PASSWORD = _configuration["VTP:Password"]
+                };
+
+                var jsonPayload = JsonConvert.SerializeObject(payload);
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+                var response = await client.PostAsync(_configuration["VTP:LoginUrl"], content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    JObject jsonResponse = JObject.Parse(responseString);
+                    string result = jsonResponse["data"]["token"].ToString();
+                    
+                    return result;
+                }
+                else
+                {
+                    throw new Exception("Failed to fetch token");
+                }
+            }
         }
 
     }
