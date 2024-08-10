@@ -34,7 +34,14 @@ namespace Exe201_backend.Controllers
         {
             string username = User.GetUserName();
 
-            var result = await _orderService.GetAll(username);
+            string role = User.GetRoleName();
+            bool isAdmin = false;
+            if(role == "admin")
+            {
+                isAdmin = true;
+            }
+
+            var result = await _orderService.GetAll(username, isAdmin);
 
             if (!result.Success)
             {

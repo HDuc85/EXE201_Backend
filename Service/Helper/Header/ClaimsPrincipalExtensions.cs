@@ -12,5 +12,10 @@ namespace Service.Helper.Header
         {
             return user?.Claims.FirstOrDefault(c => c.Type == "Username")?.Value;
         }
+
+        public static string GetRoleName(this ClaimsPrincipal user)
+        {
+            return user?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        }
     }
 }

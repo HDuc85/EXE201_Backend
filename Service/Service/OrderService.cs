@@ -84,7 +84,7 @@ namespace Service.Service
                 var result = jsonResponse?["status"];
                 if (result == null)
                 {
-                return true;
+                    return true;
 
                 }
                 else
@@ -168,7 +168,7 @@ namespace Service.Service
 
 
         }
-        public async Task<ApiResult<bool>> UpdateOrderStatus(string username,int OrderId, int OrderStatusId)
+        public async Task<ApiResult<bool>> UpdateOrderStatus(string username, int OrderId, int OrderStatusId)
         {
             var user = await _userService.UserExits(username);
             var order = await _unitOfWork.RepositoryOrder.GetSingleByCondition(x => x.UserId == user.Id && x.Id == OrderId);
@@ -181,7 +181,7 @@ namespace Service.Service
                 };
             }
 
-            var orderStatus = await _unitOfWork.RepositoryOrderStatus.GetById(OrderStatusId); 
+            var orderStatus = await _unitOfWork.RepositoryOrderStatus.GetById(OrderStatusId);
             if (orderStatus == null)
             {
                 return new ApiResult<bool>()
@@ -209,7 +209,8 @@ namespace Service.Service
                     message = $"Update OrderId {order.Id} is successful"
                 };
 
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -220,7 +221,7 @@ namespace Service.Service
         {
             var user = await _userService.UserExits(username);
             var order = await _unitOfWork.RepositoryOrder.GetSingleByCondition(x => x.UserId == user.Id && x.Id == OrderId);
-            if(order == null)
+            if (order == null)
             {
                 return new ApiResult<OrderViewDTO>() { Success = false, message = "Order is invalid" };
             }
@@ -234,36 +235,37 @@ namespace Service.Service
                 ShipPrice = (double)order.ShipPrice,
                 OrderStatus = status.Status,
                 PaymentStatus = paymentSatus.Status,
-                VoucherName = ""
+                OrderPrice = order.Price
 
             };
-            if (order.VoucherId != null)
-            {
-                var voucher = await _unitOfWork.repositoryVoucher.GetById(order.VoucherId);
-                if (voucher != null)
-                {
-                    orderview.VoucherName = voucher.VoucherName;
-                }
-            }
+         
 
             return new ApiResult<OrderViewDTO>()
             {
                 Success = true,
                 Value = orderview
             };
-            
+
         }
-        public async Task<ApiResult<IEnumerable<OrderViewDTO>>> GetAll(string username)
+        public async Task<ApiResult<IEnumerable<OrderViewDTO>>> GetAll(string username, bool IsAdmin)
         {
             var user = await _userService.UserExits(username);
-            var listOder = await _unitOfWork.RepositoryOrder.GetAll(x => x.UserId == user.Id);
+            IEnumerable<Order> listOder;
+            if (IsAdmin)
+            {
+                 listOder = await _unitOfWork.RepositoryOrder.GetAll();
+            }
+            else
+            { 
+                 listOder = await _unitOfWork.RepositoryOrder.GetAll(x => x.UserId == user.Id);
+            }
 
-            if(listOder != null && listOder.Count() > 0)
+            if (listOder != null && listOder.Count() > 0)
             {
                 var listPaymentSatus = await _unitOfWork.RepositoryPaymentStatus.GetAll();
                 var listOrderStatus = await _unitOfWork.RepositoryOrderStatus.GetAll();
                 List<OrderViewDTO> orderview = new List<OrderViewDTO>();
-               
+
                 foreach (var order in listOder)
                 {
                     var paymentDetail = await _unitOfWork.RepositoryPaymentDetail.GetById(order.PaymentId);
@@ -284,14 +286,15 @@ namespace Service.Service
 
                         var orderstatus = listOrderStatus.FirstOrDefault(x => x.Id == order.StatusId);
                         var PaymentStatus = listPaymentSatus.FirstOrDefault(x => x.Id == paymentDetail.PaymentStatusId);
+                        if(order.ShipPrice != null)
                         orderview.Add(new()
                         {
                             OrderId = order.Id,
-                            ShipPrice = order.ShipPrice.HasValue ? (double) order.ShipPrice : 0,
+                            ShipPrice = order.ShipPrice.HasValue ? (double)order.ShipPrice : 0,
                             TrackingNumber = order.TrackingNumber,
                             OrderStatus = orderstatus == null ? "" : orderstatus.Status,
                             PaymentStatus = PaymentStatus == null ? "" : PaymentStatus.Status,
-                            VoucherName = vourchername
+                            OrderPrice = order.Price,
                         });
                     }
                 }
@@ -303,11 +306,11 @@ namespace Service.Service
                 };
 
             }
-            return new () { Success = false, message = "Order is empty" };
-        
+            return new() { Success = false, message = "Order is empty" };
 
 
-         }
+
+        }
         public async Task<ApiResult<TotalPriceDTO>> TotalPriceItem(string username, TotalPriceItemDTO makeOrder)
         {
             var user = await _userService.UserExits(username);
@@ -412,43 +415,43 @@ namespace Service.Service
 
             var order = await _unitOfWork.RepositoryOrder.GetById(orderId);
 
-            if(order == null)
+            if (order == null)
             {
                 throw new Exception("Order Id is invalid");
             }
 
-            if(order.TrackingNumber != null)
+            if (order.TrackingNumber != null)
             {
 
 
-            var payload = new
-            {
-                TYPE = 4,
-                ORDER_NUMBER = order.TrackingNumber,
-                NOTE = $"Cancel order number {order.Id}"
-            };
-
-            var jsonPayload = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            var token = await _tokenHandler.GetTokenVTPAsync();
-            string getpriceUrl = _configuration["VTP:CancelOrderUrl"];
-
-            using (var client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Add("token", token);
-
-                var response = await client.PostAsync(getpriceUrl, content);
-
-                if (!response.IsSuccessStatusCode)
+                var payload = new
                 {
-                    throw new Exception($"Request failed with status code: {response.StatusCode}");
+                    TYPE = 4,
+                    ORDER_NUMBER = order.TrackingNumber,
+                    NOTE = $"Cancel order number {order.Id}"
+                };
+
+                var jsonPayload = JsonConvert.SerializeObject(payload);
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                var token = await _tokenHandler.GetTokenVTPAsync();
+                string getpriceUrl = _configuration["VTP:CancelOrderUrl"];
+
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Add("token", token);
+
+                    var response = await client.PostAsync(getpriceUrl, content);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception($"Request failed with status code: {response.StatusCode}");
+                    }
+
                 }
-               
-            }
 
             }
             _unitOfWork.RepositoryOrderItem.Delete(x => x.OrderId == orderId);
-           
+
 
             order.StatusId = 7;
             _unitOfWork.RepositoryOrder.Update(order);
@@ -483,7 +486,7 @@ namespace Service.Service
 
             var store = await _unitOfWork.repositoryStore.
                                 GetSingleByCondition();
-           
+
             var receiverAddress = await _addressHelper.AddressFormater(makeOrder.ReceiverAddress);
             var senderAddress = await _addressHelper.AddressFormater(store.Address);
 
@@ -495,7 +498,7 @@ namespace Service.Service
             Order newOrder = new Order()
             {
                 UserId = user.Id,
-               // Price = makeOrder.totalPrice,
+                // Price = makeOrder.totalPrice,
                 StatusId = 1,
             };
             await _unitOfWork.RepositoryOrder.Insert(newOrder);
@@ -543,8 +546,8 @@ namespace Service.Service
                             PRODUCT_QUANTITY = item.Quantity
                         });
                         totalPrice += (int)Productitem.Price * item.Quantity;
-                        if(Productitem.weight != null) 
-                        totalWeight += (int)Productitem.weight;
+                        if (Productitem.weight != null)
+                            totalWeight += (int)Productitem.weight;
                         listCartorder.Add(product);
                     }
                 }
@@ -561,7 +564,7 @@ namespace Service.Service
                             BoxId = box.Id,
                             OrderId = newOrder.Id,
                             Quantity = item.Quantity,
-                            Price = box.Discount != null ? PriceDiscount((double)box.Price,(double)box.Discount) : box.Price,
+                            Price = box.Discount != null ? PriceDiscount((double)box.Price, (double)box.Discount) : box.Price,
                         });
 
                         listItem.Add(new()
@@ -586,9 +589,9 @@ namespace Service.Service
                 TextLog = $"Order No.{newOrder.Id} Create at {DateTime.Now}"
             });
 
-           
-            
-            
+
+
+
 
             var payload = new
             {
@@ -601,7 +604,7 @@ namespace Service.Service
                 RECEIVER_PHONE = makeOrder.ReceiverPhone,
                 PRODUCT_TYPE = "HH",
                 PRODUCT_WEIGHT = totalWeight,
-               // MONEY_COLLECTION = (int)totalPrice,
+                // MONEY_COLLECTION = (int)totalPrice,
                 ORDER_PAYMENT = makeOrder.PaymentType,
                 ORDER_SERVICE = makeOrder.OrderService,
                 ORDER_NOTE = makeOrder.OrderNote,
@@ -646,7 +649,7 @@ namespace Service.Service
                     var shipcodresult = await _paymentService.ShipCOD(username, (int)newOrder.Id);
                     if (shipcodresult.Success)
                     {
-               
+
                         newOrder.StatusId = 5;
 
                     }
@@ -660,7 +663,7 @@ namespace Service.Service
                     var paymentOrder = await _paymentService.MakePayment(new PaymentInfoRequest { OrderId = (int)newOrder.Id, ip = makeOrder.UserIP }, username);
                     if (paymentOrder.Success)
                     {
-                     
+
                         paymentUrl = paymentOrder.Value;
                         newOrder.StatusId = 2;
                     }
@@ -673,7 +676,7 @@ namespace Service.Service
 
 
                 _unitOfWork.RepositoryCart.Delete(listCartorder);
-                await  _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitAsync();
                 return new()
                 {
                     Success = true,
@@ -686,15 +689,15 @@ namespace Service.Service
             }
 
         }
-        
+
         public double PriceDiscount(double price, double discount)
         {
             return price;
         }
 
-        public double DiscountVoucher(double discount, Voucher voucher) 
-        { 
-            return discount; 
+        public double DiscountVoucher(double discount, Voucher voucher)
+        {
+            return discount;
         }
 
 

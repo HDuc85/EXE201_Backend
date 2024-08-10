@@ -8,7 +8,7 @@ namespace Service.Interface
     {
         Task<bool> CheckAddress(string inforAddress);
         Task<(Object, int)> CheckShipPrice(InforAddressDTO inforAddress);
-        Task<ApiResult<IEnumerable<OrderViewDTO>>> GetAll(string username);
+        Task<ApiResult<IEnumerable<OrderViewDTO>>> GetAll(string username,bool IsAdmin);
         Task<ApiResult<OrderViewDTO>> GetById(string username, int OrderId);
         Task<ApiResult<MakeOrderReponseDTO>> MakeOrder(string username, MakeOrderDTO makeOrder);
         Task<ApiResult<bool>> RemoveOrder(string username, int? orderId);
