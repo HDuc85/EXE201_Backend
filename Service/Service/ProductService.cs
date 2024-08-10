@@ -11,17 +11,13 @@ using Data.Models;
 using Service.Interface;
 using Service.Repo;
 using Data.ViewModel.Product;
-
 using Data.ViewModel;
 using static System.Net.Mime.MediaTypeNames;
 using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
 using Microsoft.EntityFrameworkCore;
-
-
 using Service.Helper.Media;
-
 
 
 namespace Service.Service.System.Product
@@ -45,6 +41,7 @@ namespace Service.Service.System.Product
         public async Task<Data.Models.Product> CreateProduct(CreateProductDTO createProductDto)
         {
             var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var saveimage = await _mediaHelper.SaveMedia(createProductDto.Thumbnail, "ProductVariant");
             var product = new Data.Models.Product
             {
                 ProductName = createProductDto.ProductName,
@@ -61,7 +58,6 @@ namespace Service.Service.System.Product
                 var size = await GetOrCreateSizeAsync(variantDto.SizeName);
                 var brand = await GetOrCreateBrandAsync(variantDto.BrandName);
                 var color = await GetOrCreateColorAsync(variantDto.ColorName);
-                var saveimage = await _mediaHelper.SaveMediaBase64(variantDto.Thumbnail, "ProductVariant");
                 var productVariant = new ProductVariant
                 {
                     SizeId = size?.Id,
@@ -90,7 +86,6 @@ namespace Service.Service.System.Product
                     };
                     _unitOfWork.RepositoryMedia.Insert(media);
                     await _unitOfWork.CommitAsync(); // Save to get media ID
-
 
                     var productMedia = new ProductMedia
                     {
@@ -191,7 +186,7 @@ namespace Service.Service.System.Product
                 var size = await GetOrCreateSizeAsync(variantDto.SizeName);
                 var brand = await GetOrCreateBrandAsync(variantDto.BrandName);
                 var color = await GetOrCreateColorAsync(variantDto.ColorName);
-                var saveimage = await _mediaHelper.SaveMediaBase64(variantDto.Thumbnail, "ProductVariant");
+                var saveimage = await _mediaHelper.SaveMedia(updateProductDto.Thumbnail, "ProductVariant");
 
                 var productVariant = new ProductVariant
                 {
@@ -313,7 +308,6 @@ namespace Service.Service.System.Product
 
         public async Task<ApiResult<bool>> DeleteProduct(int productid)
         {
-
             var product = await _unitOfWork.RepositoryProduct.GetById(productid);
 
             // Kiểm tra nếu sản phẩm không tồn tại
@@ -375,7 +369,6 @@ namespace Service.Service.System.Product
             _unitOfWork.RepositoryTagValue.Insert(newTagValue);
             await _unitOfWork.CommitAsync();
             return newTagValue;
-
         }
         public async Task<IEnumerable<ProductDTO>> GetProductsbyTagValue(string tagValue)
         {
