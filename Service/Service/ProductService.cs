@@ -18,12 +18,7 @@ using Data.ViewModel.User;
 using Firebase.Auth;
 using Service.Helper;
 using Microsoft.EntityFrameworkCore;
-
-
 using Service.Helper.Media;
-
-
-
 namespace Service.Service.System.Product
 {
     public class ProductService : IProductService
@@ -45,6 +40,7 @@ namespace Service.Service.System.Product
         public async Task<Data.Models.Product> CreateProduct(CreateProductDTO createProductDto)
         {
             var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var saveimage = await _mediaHelper.SaveMedia(createProductDto.Thumbnail, "ProductVariant");
             var product = new Data.Models.Product
             {
                 ProductName = createProductDto.ProductName,
@@ -61,7 +57,6 @@ namespace Service.Service.System.Product
                 var size = await GetOrCreateSizeAsync(variantDto.SizeName);
                 var brand = await GetOrCreateBrandAsync(variantDto.BrandName);
                 var color = await GetOrCreateColorAsync(variantDto.ColorName);
-                var saveimage = await _mediaHelper.SaveMediaBase64(variantDto.Thumbnail, "ProductVariant");
                 var productVariant = new ProductVariant
                 {
                     SizeId = size?.Id,
@@ -69,7 +64,7 @@ namespace Service.Service.System.Product
                     ColorId = color?.Id,
                     Price = variantDto.Price,
                     Quantity = variantDto.Quantity,
-                    Thumbnail = saveimage.url,
+                    Thumbnail =saveimage.url,
                     IsActive = true,
                 };
 
@@ -191,7 +186,7 @@ namespace Service.Service.System.Product
                 var size = await GetOrCreateSizeAsync(variantDto.SizeName);
                 var brand = await GetOrCreateBrandAsync(variantDto.BrandName);
                 var color = await GetOrCreateColorAsync(variantDto.ColorName);
-                var saveimage = await _mediaHelper.SaveMediaBase64(variantDto.Thumbnail, "ProductVariant");
+                var saveimage = await _mediaHelper.SaveMedia(updateProductDto.Thumbnail, "ProductVariant");
 
                 var productVariant = new ProductVariant
                 {
