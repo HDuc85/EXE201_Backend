@@ -89,7 +89,7 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 builder.Services.AddCors(options =>
 {
   options.AddPolicy("AllowSpecificOrigins",
-      builder => builder.WithOrigins("http://localhost:3001", "http://https://68.183.186.61:3001", "http://catcake.onthewifi.com")
+      builder => builder.AllowAnyOrigin()
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });
