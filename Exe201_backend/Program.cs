@@ -21,7 +21,6 @@ using Service.Helper.Media;
 using Service.Helper.Address;
 
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -177,5 +176,4 @@ app.UseEndpoints(endpoints =>
 {
   endpoints.MapControllers();
 });
-
 app.Run();

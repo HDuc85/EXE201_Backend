@@ -19,7 +19,6 @@ namespace Service.Interface
         void RemoveRange(IEnumerable<T> entities);
 
         Task<IEnumerable<T>> GetListByCondition(Expression<Func<T, bool>> expression = null);
-
         IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> expression = null);
 
     }

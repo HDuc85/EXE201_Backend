@@ -19,7 +19,6 @@ using Service.Helper;
 using Microsoft.EntityFrameworkCore;
 using Service.Helper.Media;
 
-
 namespace Service.Service.System.Product
 {
     public class ProductService : IProductService
@@ -65,7 +64,7 @@ namespace Service.Service.System.Product
                     ColorId = color?.Id,
                     Price = variantDto.Price,
                     Quantity = variantDto.Quantity,
-                    Thumbnail = saveimage.url,
+                    Thumbnail =saveimage.url,
                     IsActive = true,
                 };
 
